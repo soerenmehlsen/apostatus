@@ -67,8 +67,9 @@ export default function StockCheck() {
 
    // Filter products based on search term and current location
   const filteredProducts = mockProducts.filter(product => 
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.id.toLowerCase().includes(searchTerm.toLowerCase())
+    (product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    product.id.toLowerCase().includes(searchTerm.toLowerCase())) &&
+    product.location === currentLocation
   );
 
   // Filter locations to only show selected ones
@@ -119,7 +120,7 @@ export default function StockCheck() {
             </Select>
           </div>
         
-        <ScrollArea className="h-[50vh] md:h-[60vh] lg:h-[70vh] w-full">
+        <ScrollArea className="max-h-[50vh] max-md:h-[60vh] max-lg:h-[70vh] w-full">
           <Table>
             <TableHeader>
               <TableRow>
