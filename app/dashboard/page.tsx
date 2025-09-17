@@ -68,7 +68,7 @@ export default function Dashboard() {
                   <TableCell>
                     <Badge variant={
                       item.status === 'In Progress' ? 'secondary' :
-                      item.status === 'Not confirmed' ? 'secondary' :
+                      item.status === 'Review' ? 'secondary' :
                       'default'
                     }>
                       {item.status}

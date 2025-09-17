@@ -6,9 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { mockLocations, mockProducts } from "@/lib/data";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function StockCheck() {
     const [searchTerm, setSearchTerm] = useState('');
@@ -41,6 +41,14 @@ export default function StockCheck() {
         setProductCounts(prev => ({
             ...prev,
             [productId]: Math.max(0, (prev[productId] || 0) + change)
+        }));
+    };
+
+    // Set product count to expected quantity
+    const setToExpectedQty = (productId: string, expectedQty: number) => {
+        setProductCounts(prev => ({
+            ...prev,
+            [productId]: expectedQty
         }));
     };
 
@@ -110,7 +118,8 @@ export default function StockCheck() {
               </SelectContent>
             </Select>
           </div>
-
+        
+        <ScrollArea className="h-[50vh] md:h-[60vh] lg:h-[70vh] w-full">
           <Table>
             <TableHeader>
               <TableRow>
@@ -118,6 +127,7 @@ export default function StockCheck() {
                 <TableHead>Name</TableHead>
                 <TableHead className="text-center">Qty</TableHead>
                 <TableHead className="text-center">Count</TableHead>
+                <TableHead></TableHead>
                 <TableHead>Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -155,6 +165,18 @@ export default function StockCheck() {
                                             </Button>
                                         </div>
                     </TableCell>
+                    <TableCell>
+                        <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="h-8 w-8 p-0 transition-all duration-150 active:scale-80"
+                                                onClick={() => setToExpectedQty(product.id, product.qty)}
+                                                disabled={checkedProducts.has(product.id)}
+                                            >
+                                                =
+                                            </Button>
+                                            </TableCell>
+
                   <TableCell>
                     <Button
                     className="w-20" 
@@ -169,6 +191,7 @@ export default function StockCheck() {
               ))}
             </TableBody>
           </Table>
+          </ScrollArea>
 
           <div className="mt-6">
             <Progress value={progressPercentage} className="h-2" />
