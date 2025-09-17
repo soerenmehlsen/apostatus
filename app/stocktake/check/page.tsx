@@ -112,7 +112,7 @@ export default function StockCheck() {
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                className="h-8 w-8 p-0"
+                                                className="h-8 w-8 p-0 transition-all duration-150 active:scale-80"
                                                 onClick={() => updateProductCount(product.id, -1)}
                                             >
                                                 −
@@ -123,7 +123,7 @@ export default function StockCheck() {
                                             <Button
                                                 size="sm"
                                                 variant="outline"
-                                                className="h-8 w-8 p-0"
+                                                className="h-8 w-8 p-0 transition-all duration-150 active:scale-80"
                                                 onClick={() => updateProductCount(product.id, 1)}
                                             >
                                                 +
