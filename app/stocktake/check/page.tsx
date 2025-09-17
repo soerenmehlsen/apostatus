@@ -16,6 +16,7 @@ export default function StockCheck() {
     const [initials, setInitials] = useState('');
     const [currentLocation, setCurrentLocation] = useState('');
     const [productCounts, setProductCounts] = useState<Record<string, number>>({});
+    const [checkedProducts, setCheckedProducts] = useState<Set<string>>(new Set());
 
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -43,6 +44,19 @@ export default function StockCheck() {
         }));
     };
 
+       // Toggle check status for a product
+    const toggleProductCheck = (productId: string) => {
+        setCheckedProducts(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(productId)) {
+                newSet.delete(productId);
+            } else {
+                newSet.add(productId);
+            }
+            return newSet;
+        });
+    };
+
    // Filter products based on search term and current location
   const filteredProducts = mockProducts.filter(product => 
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -53,6 +67,12 @@ export default function StockCheck() {
   const availableLocations = mockLocations.filter(loc => 
     selectedLocations.includes(loc.id)
   );
+
+  // Calculate progress
+  const totalProducts = filteredProducts.length;
+  const checkedCount = filteredProducts.filter(product => checkedProducts.has(product.id)).length;
+  const progressPercentage = totalProducts > 0 ? (checkedCount / totalProducts) * 100 : 0;
+  const isAllChecked = checkedCount === totalProducts && totalProducts > 0;
 
   return (
     <div className="space-y-6 py-4">
@@ -103,7 +123,10 @@ export default function StockCheck() {
             </TableHeader>
             <TableBody>
               {filteredProducts.map((product) => (
-                <TableRow key={product.id}>
+                <TableRow 
+                key={product.id}
+                className={checkedProducts.has(product.id) ? "bg-primary/20" : ""}
+                >
                   <TableCell className="font-medium">{product.id}</TableCell>
                   <TableCell>{product.name}</TableCell>
                   <TableCell className="text-center">{product.qty}</TableCell>
@@ -114,6 +137,7 @@ export default function StockCheck() {
                                                 variant="outline"
                                                 className="h-8 w-8 p-0 transition-all duration-150 active:scale-80"
                                                 onClick={() => updateProductCount(product.id, -1)}
+                                                disabled={checkedProducts.has(product.id)}
                                             >
                                                 −
                                             </Button>
@@ -125,13 +149,21 @@ export default function StockCheck() {
                                                 variant="outline"
                                                 className="h-8 w-8 p-0 transition-all duration-150 active:scale-80"
                                                 onClick={() => updateProductCount(product.id, 1)}
+                                                disabled={checkedProducts.has(product.id)}
                                             >
                                                 +
                                             </Button>
                                         </div>
                     </TableCell>
                   <TableCell>
-                    <Button size="sm" variant="outline">Check</Button>
+                    <Button
+                    className="w-20" 
+                    size="sm" 
+                     variant={checkedProducts.has(product.id) ? "default" : "outline"}
+                      onClick={() => toggleProductCheck(product.id)}
+                    >
+                      {checkedProducts.has(product.id) ? "Checked" : "Check"}
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -139,13 +171,14 @@ export default function StockCheck() {
           </Table>
 
           <div className="mt-6">
-            <Progress value={75} className="h-2" />
-            <p className="text-sm text-gray-500 mt-2">6/7 left</p>
+            <Progress value={progressPercentage} className="h-2" />
+            <p className="text-sm text-gray-500 mt-2">{checkedCount}/{totalProducts} Left</p>
           </div>
 
           <div className="flex justify-end mt-6">
             <Button 
               onClick={() => alert('Stocktake completed!')}
+              disabled={!isAllChecked}
             >
               Complete Check
             </Button>
