@@ -17,7 +17,7 @@ const handleStartStocktake = () => {
       initials: initials
     });
     
-    router.push(`/stocktake/stock-check?${params.toString()}`);
+    router.push(`/stocktake/check?${params.toString()}`);
   };
 
   return (

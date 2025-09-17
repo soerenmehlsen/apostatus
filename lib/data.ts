@@ -10,7 +10,7 @@ export const mockLocations = [
 
 export const mockProducts = [
   { id: 'Z00124', name: 'Aspirin Extensan Junior 75 mg 100 stk', qty: 5, count: 4, status: 'Check' },
-  { id: 'Z18827', name: 'Aspirin Extensan Junior 75mg ×100 stk', qty: 1, count: 1, status: 'OK' },
+  { id: 'Z18827', name: 'Aspirin Extensan Junior 75mg 100 stk', qty: 1, count: 1, status: 'OK' },
   { id: 'Z17748', name: 'Aspirin Extensan 500mg', qty: 0, count: 0, status: 'Restocked' },
   { id: 'Z88186', name: 'Aspirin Ibuprofen 60×10', qty: 2, count: 0, status: 'Missing' },
   { id: 'Z78711', name: 'Aspirin Paracetamol TMF 50', qty: 0, count: 0, status: 'Check' },
