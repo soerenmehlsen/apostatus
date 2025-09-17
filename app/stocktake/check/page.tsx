@@ -15,6 +15,7 @@ export default function StockCheck() {
     const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
     const [initials, setInitials] = useState('');
     const [currentLocation, setCurrentLocation] = useState('');
+    const [productCounts, setProductCounts] = useState<Record<string, number>>({});
 
     const searchParams = useSearchParams();
     const router = useRouter();
@@ -34,6 +35,14 @@ export default function StockCheck() {
     }
   }, [searchParams]);
 
+  // Update count for a specific product
+    const updateProductCount = (productId: string, change: number) => {
+        setProductCounts(prev => ({
+            ...prev,
+            [productId]: Math.max(0, (prev[productId] || 0) + change)
+        }));
+    };
+
    // Filter products based on search term and current location
   const filteredProducts = mockProducts.filter(product => 
     product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -46,7 +55,7 @@ export default function StockCheck() {
   );
 
   return (
-    <div className="space-y-6 px-6 py-4">
+    <div className="space-y-6 py-4">
        <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold">Stock Check</h1>
         <div className="text-sm text-muted-foreground">
@@ -87,10 +96,9 @@ export default function StockCheck() {
               <TableRow>
                 <TableHead>Article</TableHead>
                 <TableHead>Name</TableHead>
-                <TableHead>Qty</TableHead>
-                <TableHead>Count</TableHead>
+                <TableHead className="text-center">Qty</TableHead>
+                <TableHead className="text-center">Count</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -98,18 +106,30 @@ export default function StockCheck() {
                 <TableRow key={product.id}>
                   <TableCell className="font-medium">{product.id}</TableCell>
                   <TableCell>{product.name}</TableCell>
-                  <TableCell>{product.qty}</TableCell>
-                  <TableCell>{product.count}</TableCell>
-                  <TableCell>
-                    <Badge variant={
-                      product.status === 'OK' ? 'secondary' :
-                      product.status === 'Restocked' ? 'default' :
-                      product.status === 'Missing' ? 'destructive' :
-                      'outline'
-                    }>
-                      {product.status}
-                    </Badge>
-                  </TableCell>
+                  <TableCell className="text-center">{product.qty}</TableCell>
+                   <TableCell className="text-center">
+                                        <div className="flex items-center justify-center gap-2">
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="h-8 w-8 p-0"
+                                                onClick={() => updateProductCount(product.id, -1)}
+                                            >
+                                                −
+                                            </Button>
+                                            <span className="w-8 text-center font-medium">
+                                                {productCounts[product.id] || 0}
+                                            </span>
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="h-8 w-8 p-0"
+                                                onClick={() => updateProductCount(product.id, 1)}
+                                            >
+                                                +
+                                            </Button>
+                                        </div>
+                    </TableCell>
                   <TableCell>
                     <Button size="sm" variant="outline">Check</Button>
                   </TableCell>
