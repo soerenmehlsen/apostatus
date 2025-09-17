@@ -1,14 +1,13 @@
-import { Header } from "@/components/layout/header";
+
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { mockStocktakes } from "@/lib/data";
+import Link from "next/link";
 
 export default function Dashboard() {
   return (
-    <div className="min-h-screen bg-background">
-      <Header />
        <div className="space-y-6 px-6 py-4">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <h1 className="text-2xl font-bold">Dashboard</h1>
@@ -16,9 +15,11 @@ export default function Dashboard() {
           <Button>
             Archive
           </Button>
-          <Button>
-            New Stocktake
-          </Button>
+          <Link href="/stocktake/new">
+            <Button>
+              New Stocktake
+            </Button>
+          </Link>
         </div>
       </div>
 
@@ -82,7 +83,6 @@ export default function Dashboard() {
           </Table>
         </CardContent>
       </Card>
-    </div>
     </div>
   );
 }
