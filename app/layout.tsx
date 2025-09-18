@@ -37,9 +37,7 @@ export default function RootLayout({
         >
           <div className="min-h-screen bg-background">
             <Header />
-            <main className="px-6 py-4">
-              {children}
-            </main>
+            <main className="px-6 py-4">{children}</main>
           </div>
         </ThemeProvider>
       </body>

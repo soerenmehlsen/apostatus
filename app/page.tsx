@@ -6,8 +6,7 @@ export default function Home() {
       <main>
         <Dashboard />
       </main>
-      <footer>
-      </footer>
+      <footer></footer>
     </div>
   );
 }

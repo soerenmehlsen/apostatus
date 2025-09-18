@@ -1,6 +1,18 @@
-
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { mockStocktakes } from "@/lib/data";
@@ -8,17 +20,15 @@ import Link from "next/link";
 
 export default function Dashboard() {
   return (
-       <div className="space-y-6 px-6 py-4">
+    <div className="space-y-6 px-6 py-4">
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
         <h1 className="text-2xl font-bold">Dashboard</h1>
         <div className="flex gap-4">
-          <Button>
-            Archive
-          </Button>
+          <Link href="/upload">
+            <Button>Upload</Button>
+          </Link>
           <Link href="/stocktake/new">
-            <Button>
-              New Stocktake
-            </Button>
+            <Button>New Stocktake</Button>
           </Link>
         </div>
       </div>
@@ -33,20 +43,22 @@ export default function Dashboard() {
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Stocktakes Completed</CardDescription>
-            <CardTitle className="text-3xl">3 <span className="text-base">of 23</span></CardTitle>
+            <CardTitle className="text-3xl">
+              3 <span className="text-base">of 23</span>
+            </CardTitle>
           </CardHeader>
         </Card>
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Next Stocktake</CardDescription>
-            <CardTitle className="text-3xl">Maj 2026</CardTitle>
+            <CardTitle className="text-3xl">May 2026</CardTitle>
           </CardHeader>
         </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Seneste Aktivitet</CardTitle>
+          <CardTitle>Latest Activity</CardTitle>
         </CardHeader>
         <CardContent>
           <Table>
@@ -66,16 +78,22 @@ export default function Dashboard() {
                   <TableCell>{item.name}</TableCell>
                   <TableCell>{item.date}</TableCell>
                   <TableCell>
-                    <Badge variant={
-                      item.status === 'In Progress' ? 'secondary' :
-                      item.status === 'Review' ? 'secondary' :
-                      'default'
-                    }>
+                    <Badge
+                      variant={
+                        item.status === "In Progress"
+                          ? "secondary"
+                          : item.status === "Review"
+                          ? "secondary"
+                          : "default"
+                      }
+                    >
                       {item.status}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Button variant="link" size="sm">View Details</Button>
+                    <Button variant="link" size="sm">
+                      View Details
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}

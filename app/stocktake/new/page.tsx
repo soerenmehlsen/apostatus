@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,29 +7,30 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function NewStocktake() {
-const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
-const [initials, setInitials] = useState('');
-const router = useRouter();
+  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
+  const [initials, setInitials] = useState("");
+  const router = useRouter();
 
-const handleStartStocktake = () => {
+  const handleStartStocktake = () => {
     const params = new URLSearchParams({
-      locations: selectedLocations.join(','),
-      initials: initials
+      locations: selectedLocations.join(","),
+      initials: initials,
     });
-    
+
     router.push(`/stocktake/check?${params.toString()}`);
   };
 
   return (
     <div className="space-y-6 px-6 py-4">
       <h1 className="text-2xl font-bold">New stocktake</h1>
-      
+
       <Card>
         <CardHeader>
           <CardTitle>Name</CardTitle>
-          <Input placeholder="Enter your initials" 
-          value={initials}
-          onChange={(e) => setInitials(e.target.value)}
+          <Input
+            placeholder="Enter your initials"
+            value={initials}
+            onChange={(e) => setInitials(e.target.value)}
           />
         </CardHeader>
       </Card>
@@ -43,13 +44,19 @@ const handleStartStocktake = () => {
             {mockLocations.map((location) => (
               <div key={location.id} className="text-center">
                 <Button
-                  variant={selectedLocations.includes(location.id) ? "default" : "outline"}
+                  variant={
+                    selectedLocations.includes(location.id)
+                      ? "default"
+                      : "outline"
+                  }
                   className="w-full h-20 flex flex-col"
                   onClick={() => {
                     if (selectedLocations.includes(location.id)) {
-                      setSelectedLocations(prev => prev.filter(id => id !== location.id));
+                      setSelectedLocations((prev) =>
+                        prev.filter((id) => id !== location.id)
+                      );
                     } else {
-                      setSelectedLocations(prev => [...prev, location.id]);
+                      setSelectedLocations((prev) => [...prev, location.id]);
                     }
                   }}
                 >
@@ -63,7 +70,7 @@ const handleStartStocktake = () => {
       </Card>
 
       <div className="flex justify-end">
-        <Button 
+        <Button
           disabled={selectedLocations.length === 0 || !initials.trim()}
           onClick={handleStartStocktake}
         >
