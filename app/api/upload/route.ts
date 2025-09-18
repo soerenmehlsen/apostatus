@@ -1,20 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseCSV, ProductData } from '@/lib/csv-parser';
+import { PrismaClient } from '@prisma/client';
 
-// A simple in-memory storage for uploaded files
-let uploadedFiles: Array<{
-  id: string;
-  filename: string;
-  uploadDate: string;
-  location: string;
-  products: ProductData[];
-}> = [];
+const prisma = new PrismaClient();
+
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
     const files = formData.getAll('files') as File[];
-    
+
     const results = [];
     
     for (const file of files) {
@@ -31,26 +26,53 @@ export async function POST(request: NextRequest) {
       // Extract location from first product (assuming all products in file have same location)
       const location = products.length > 0 ? products[0].location : 'Unknown';
       
-      const fileData = {
-        id: crypto.randomUUID(),
-        filename: file.name,
-        uploadDate: new Date().toISOString(),
-        location: location,
-        products: products
-      };
-      
-      uploadedFiles.push(fileData);
-      results.push({
-        filename: file.name,
-        location: location,
-        productCount: products.length
-      });
+      // Save to database
+      try {
+        // Create the uploaded file record
+        const uploadedFile = await prisma.uploadedFile.create({
+          data: {
+            filename: file.name.replace(/\.[^/.]+$/, ""), // Remove extension for display
+            uploadDate: new Date(),
+            location: location,
+            productCount: products.length, // Link to session if provided
+            products: {
+              create: products.map((product: ProductData) => ({
+                name: product.navn,
+                sku: product.lagernr,
+                quantity: product.antal,
+                price: product.kostpris,
+                location: product.location,
+                expectedQty: product.antal, // Set expected = imported quantity initially
+                // countedQty and variance will be null until stock check is performed
+              }))
+            }
+          },
+          include: {
+            products: true,
+          }
+        });
+
+        results.push({
+          id: uploadedFile.id,
+          filename: uploadedFile.filename,
+          location: uploadedFile.location,
+          productCount: uploadedFile.productCount,
+          uploadDate: uploadedFile.uploadDate.toISOString()
+        });
+
+      } catch (dbError) {
+        console.error('Database error:', dbError);
+        return NextResponse.json(
+          { error: `Failed to save data to database: ${dbError}` },
+          { status: 500 }
+        );
+      }
     }
     
     return NextResponse.json({ 
       success: true, 
       files: results,
-      message: `Successfully uploaded ${files.length} file(s)`
+      message: `Successfully uploaded ${files.length} file(s) and saved ${results.reduce((sum, r) => sum + r.productCount, 0)} products to database`
     });
     
   } catch (error) {
@@ -59,22 +81,65 @@ export async function POST(request: NextRequest) {
       { error: 'Failed to process upload' },
       { status: 500 }
     );
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
 export async function GET() {
-  return NextResponse.json({ files: uploadedFiles });
+  try {
+    const files = await prisma.uploadedFile.findMany({
+      include: {
+        products: true
+      },
+      orderBy: {
+        uploadDate: 'desc'
+      }
+    });
+
+    const formattedFiles = files.map((file: any) => ({
+      id: file.id,
+      filename: file.filename,
+      uploadDate: file.uploadDate.toISOString(),
+      location: file.location,
+      productCount: file.productCount,
+      products: file.products,
+    }));
+
+    return NextResponse.json({ files: formattedFiles });
+  } catch (error) {
+    console.error('Error fetching files:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch files' },
+      { status: 500 }
+    );
+  } finally {
+    await prisma.$disconnect();
+  }
 }
 
 export async function DELETE(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const fileId = searchParams.get('id');
-  
-  if (!fileId) {
-    return NextResponse.json({ error: 'File ID required' }, { status: 400 });
+  try {
+    const { searchParams } = new URL(request.url);
+    const fileId = searchParams.get('id');
+    
+    if (!fileId) {
+      return NextResponse.json({ error: 'File ID required' }, { status: 400 });
+    }
+    
+    // Delete the file and all related products (cascade delete)
+    await prisma.uploadedFile.delete({
+      where: { id: fileId }
+    });
+    
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting file:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete file' },
+      { status: 500 }
+    );
+  } finally {
+    await prisma.$disconnect();
   }
-  
-  uploadedFiles = uploadedFiles.filter(file => file.id !== fileId);
-  
-  return NextResponse.json({ success: true });
 }

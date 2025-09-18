@@ -32,7 +32,7 @@ export function parseCSV(csvContent: string): ProductData[] {
       });
     }
   }
-  
+ console.log(`✅ Created product:`, products);
   return products;
 }
 

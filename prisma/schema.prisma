@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlserver"
+  url      = env("DATABASE_URL")
+}
+
+model StocktakeSession {
+  id          String   @id @default(cuid())
+  name        String
+  status      String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  createdBy   String?  // User who created the session
+  
+  uploadedFiles UploadedFile[]
+  stockChecks   StockCheck[]
+  
+  @@map("stocktake_sessions")
+}
+
+model UploadedFile {
+  id           String    @id @default(cuid())
+  filename     String
+  uploadDate   DateTime  @default(now())
+  location     String
+  productCount Int       @default(0)
+  
+  // Link to stocktake session
+  stocktakeSessionId String?
+  stocktakeSession   StocktakeSession? @relation(fields: [stocktakeSessionId], references: [id], onDelete: Cascade)
+  
+  products     Product[]
+  
+  @@map("uploaded_files")
+}
+
+model Product {
+  id       String @id @default(cuid())
+  fileId   String
+  name     String
+  sku      String?
+  quantity Int?
+  price    Float?
+  location String? // Physical location/warehouse section
+  
+  // Additional fields for stocktake operations
+  expectedQty Int?    // Expected quantity for comparison
+  countedQty  Int?    // Actually counted quantity
+  variance    Int?    // Difference between expected and counted
+  
+  file        UploadedFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  stockChecks StockCheck[]
+  
+  @@index([sku])
+  @@index([name])
+  @@index([location])
+  @@map("products")
+}
+
+// Track individual stock checks/counts
+model StockCheck {
+  id          String   @id @default(cuid())
+  productId   String
+  sessionId   String
+  
+  expectedQty Int
+  countedQty  Int
+  variance    Int      // countedQty - expectedQty
+  checkedAt   DateTime @default(now())
+  checkedBy   String?  // User who performed the check
+  status      String
+  
+  product     Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  session     StocktakeSession @relation(fields: [sessionId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  
+  @@map("stock_checks")
+}

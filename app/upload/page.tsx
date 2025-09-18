@@ -27,12 +27,32 @@ interface UploadedFile {
   products?: any[];
 }
 
+// Function to format date consistently
+const formatDate = (dateString: string) => {
+  try {
+    return new Intl.DateTimeFormat('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      timeZone: 'UTC' // Force UTC to avoid server/client mismatch
+    }).format(new Date(dateString));
+  } catch (error) {
+    return 'Invalid Date';
+  }
+};
+
 
 export default function UploadPage() {
     const [uploadedFiles, setUploadedFiles] = useState<UploadedFile[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isClient, setIsClient] = useState(false);
+
+  // Ensure we're on the client before rendering dates
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const handleFileUpload = async (files: FileList) => {
     if (files.length === 0) return;
@@ -191,7 +211,7 @@ export default function UploadPage() {
                 {uploadedFiles.map((file) => (
                   <TableRow key={file.id}>
                     <TableCell className="font-medium">{file.filename}</TableCell>
-                    <TableCell>{new Date(file.uploadDate).toLocaleDateString()}</TableCell>
+                    <TableCell> {isClient ? formatDate(file.uploadDate) : 'Loading...'}</TableCell>
                     <TableCell>{file.location}</TableCell>
                     <TableCell>{file.products?.length || 0}</TableCell>
                     <TableCell>
