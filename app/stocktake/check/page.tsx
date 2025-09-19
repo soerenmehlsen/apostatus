@@ -22,6 +22,21 @@ import {
 import { Progress } from "@/components/ui/progress";
 import { mockLocations, mockProducts } from "@/lib/data";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
+
+interface Product {
+  id: string;
+  name: string;
+  sku: string;
+  quantity: number;
+  location: string;
+  expectedQty: number;
+}
+
+interface Location {
+  id: string;
+  name: string;
+}
 
 export default function StockCheck() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,14 +49,21 @@ export default function StockCheck() {
   const [checkedProducts, setCheckedProducts] = useState<Set<string>>(
     new Set()
   );
+  const [sessionId, setSessionId] = useState("");
+
+  // Database data
+  const [products, setProducts] = useState<Product[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const searchParams = useSearchParams();
   const router = useRouter();
 
-  // Get data from URL parameters
+  // Get data from URL parameters fetch database data
   useEffect(() => {
     const locationParam = searchParams.get("locations");
     const initialsParam = searchParams.get("initials");
+    const sessionIdParam = searchParams.get("sessionId");
 
     if (locationParam) {
       const locations = locationParam.split(",");
@@ -51,7 +73,37 @@ export default function StockCheck() {
     if (initialsParam) {
       setInitials(initialsParam);
     }
+    if (sessionIdParam) {
+      setSessionId(sessionIdParam);
+    }
+
+    // Fetch data from database
+    fetchStocktakeData();
   }, [searchParams]);
+
+  const fetchStocktakeData = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/stockcheck/stockdata');
+      const data = await response.json();
+
+      if (response.ok) {
+        setProducts(data.products || []);
+        setLocations(data.locations || []);
+      } else {
+        toast.error("Failed to load stocktake data", {
+          description: data.error,
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching stocktake data:', error);
+      toast.error("Failed to load data", {
+        description: "Please try again later",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Update count for a specific product
   const updateProductCount = (productId: string, change: number) => {
@@ -82,8 +134,85 @@ export default function StockCheck() {
     });
   };
 
+  // Save stock check to database
+  const saveStockCheck = async (productId: string, countedQty: number) => {
+    const product = products.find(p => p.id === productId);
+    if (!product) return;
+
+    try {
+      const response = await fetch('/api/stockcheck/saveproduct', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          productId,
+          sessionId,
+          expectedQty: product.expectedQty,
+          countedQty,
+          variance: countedQty - product.expectedQty,
+          checkedBy: initials,
+          status: 'checked'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save stock check');
+      }
+    } catch (error) {
+      console.error('Error saving stock check:', error);
+      toast.error("Failed to save check", {
+        description: "Please try again",
+      });
+    }
+  };
+
+  // Enhanced toggle that also saves to database
+  const handleProductCheck = async (productId: string) => {
+    const currentCount = productCounts[productId] || 0;
+    
+    if (!checkedProducts.has(productId)) {
+      // Save to database when checking
+      await saveStockCheck(productId, currentCount);
+    }
+    
+    toggleProductCheck(productId);
+  };
+
+  // Complete stocktake
+  const completeStocktake = async () => {
+    if (!isAllChecked) return;
+
+    try {
+      const response = await fetch('/api/stockcheck/completecheck', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          sessionId,
+          completedBy: initials,
+        }),
+      });
+
+      if (response.ok) {
+        toast.success("Stocktake completed!", {
+          description: "All checks have been saved successfully",
+        });
+        router.push('/dashboard');
+      } else {
+        throw new Error('Failed to complete stocktake');
+      }
+    } catch (error) {
+      console.error('Error completing stocktake:', error);
+      toast.error("Failed to complete stocktake", {
+        description: "Please try again",
+      });
+    }
+  };
+
   // Filter products based on search term and current location
-  const filteredProducts = mockProducts.filter(
+  const filteredProducts = products.filter(
     (product) =>
       (product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.id.toLowerCase().includes(searchTerm.toLowerCase())) &&
@@ -103,6 +232,16 @@ export default function StockCheck() {
   const progressPercentage =
     totalProducts > 0 ? (checkedCount / totalProducts) * 100 : 0;
   const isAllChecked = checkedCount === totalProducts && totalProducts > 0;
+
+   if (isLoading) {
+    return (
+      <div className="space-y-6 py-4">
+        <div className="flex justify-center items-center h-64">
+          <div className="text-muted-foreground">Loading stocktake data...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6 py-4">
@@ -138,7 +277,7 @@ export default function StockCheck() {
             </Select>
           </div>
 
-          <ScrollArea className="max-h-[50vh] max-md:h-[60vh] max-lg:h-[70vh] w-full">
+          <ScrollArea className="h-[50vh] md:h-[60vh] lg:h-[65vh] w-full">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -158,9 +297,9 @@ export default function StockCheck() {
                       checkedProducts.has(product.id) ? "bg-primary/20" : ""
                     }
                   >
-                    <TableCell className="font-medium">{product.id}</TableCell>
+                    <TableCell className="font-medium">{product.sku}</TableCell>
                     <TableCell>{product.name}</TableCell>
-                    <TableCell className="text-center">{product.qty}</TableCell>
+                    <TableCell className="text-center">{product.expectedQty}</TableCell>
                     <TableCell className="text-center">
                       <div className="flex items-center justify-center gap-2">
                         <Button
@@ -192,7 +331,7 @@ export default function StockCheck() {
                         variant="outline"
                         className="h-8 w-8 p-0 transition-all duration-150 active:scale-80"
                         onClick={() =>
-                          setToExpectedQty(product.id, product.qty)
+                          setToExpectedQty(product.id, product.expectedQty)
                         }
                         disabled={checkedProducts.has(product.id)}
                       >
@@ -229,7 +368,7 @@ export default function StockCheck() {
 
           <div className="flex justify-end mt-6">
             <Button
-              onClick={() => alert("Stocktake completed!")}
+              onClick={completeStocktake}
               disabled={!isAllChecked}
             >
               Complete Check

@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
             products: {
               create: products.map((product: ProductData) => ({
                 name: product.navn,
-                sku: product.lagernr,
+                sku: product.varenr,
                 quantity: product.antal,
                 price: product.kostpris,
                 location: product.location,
