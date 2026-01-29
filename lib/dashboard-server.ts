@@ -1,18 +1,24 @@
-//import { NextResponse } from 'next/server';
+import { DashboardSession, DashboardStats } from '@/types/dashboard';
+import { SessionStatus } from '@/types/api';
 import { db as prisma } from '@/lib/db';
-import { cache, CacheKeys } from '@/lib/cache';
-import { ApiResponseBuilder } from '@/lib/api-response';
-import { withErrorHandling } from '@/lib/api-middleware';
 
-export const GET = withErrorHandling(async () => {
-  // Check cache first (cache for 2 minutes)
-  const cacheKey = CacheKeys.DASHBOARD_DATA;
-  const cachedData = cache.get(cacheKey);
+export async function getInitialDashboardData(): Promise<{
+  sessions: DashboardSession[];
+  stats: DashboardStats;
+}> {
+  const fallbackData = {
+    sessions: [],
+    stats: {
+      needsReview: 0,
+      completedSessions: 0,
+      totalSessions: 0,
+      reviewSessions: 0,
+    },
+  };
 
-  if (cachedData) {
-    return ApiResponseBuilder.success(cachedData);
-  }
-
+  try {
+    console.log('Server: Starting dashboard data fetch...');
+    
     // Single optimized query to get all needed data
     const [stocktakeSessions, sessionStats] = await Promise.all([
       // Get latest 10 sessions with related data
@@ -55,16 +61,18 @@ export const GET = withErrorHandling(async () => {
     const reviewSessions = statsMap.review || 0;
 
     // Format the data for the dashboard (using _count for performance)
-    const formattedSessions = stocktakeSessions.map(session => ({
+    const formattedSessions: DashboardSession[] = stocktakeSessions.map(session => ({
       id: session.id,
       name: session.createdBy || 'Unknown',
       date: session.createdAt.toISOString().split('T')[0],
-      status: session.status,
+      status: session.status as SessionStatus,
       location: session.uploadedFiles?.map(file => file.location) || [],
       stockChecksCount: session._count.stockChecks
     }));
 
-    const responseData = {
+    console.log('Server: Dashboard data fetched successfully');
+    
+    return {
       sessions: formattedSessions,
       stats: {
         totalSessions,
@@ -73,9 +81,10 @@ export const GET = withErrorHandling(async () => {
         needsReview: reviewSessions
       }
     };
-
-  // Cache the response for 2 minutes
-  cache.set(cacheKey, responseData, 120);
-
-  return ApiResponseBuilder.success(responseData);
-});
+    
+  } catch (error) {
+    console.error('Server: Error fetching initial dashboard data:', error);
+    // Always return fallback data instead of throwing
+    return fallbackData;
+  }
+}

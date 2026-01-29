@@ -2,10 +2,11 @@ import { memo } from "react";
 import { TableRow, TableCell } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import type { StocktakeSession, BadgeVariant } from "@/types/dashboard";
+import type { DashboardSession, BadgeVariant } from "@/types/dashboard";
+import Link from "next/link";
 
 interface SessionTableRowProps {
-  session: StocktakeSession;
+  session: DashboardSession;
   formatDate: (date: string) => string;
   getBadgeVariant: (status: string) => BadgeVariant;
 }
@@ -25,9 +26,11 @@ const SessionTableRow = memo(({
       </Badge>
     </TableCell>
     <TableCell>
+      <Link href={`/review?sessionId=${session.id}`}>
       <Button variant="link" size="sm">
         View Details
       </Button>
+      </Link>
     </TableCell>
   </TableRow>
 ));

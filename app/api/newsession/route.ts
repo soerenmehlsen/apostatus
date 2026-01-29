@@ -1,26 +1,19 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+//import { NextRequest } from 'next/server';
+import { db as prisma } from '@/lib/db';
+import { createSessionSchema } from '@/lib/validations/session';
+import { ApiResponseBuilder } from '@/lib/api-response';
+import { withValidation, withErrorHandling } from '@/lib/api-middleware';
 
-const prisma = new PrismaClient();
-
-export async function POST(request: NextRequest) {
-  try {
-    const body = await request.json();
-    const { name, locations, createdBy } = body;
-
-    if (!name || !locations || locations.length === 0) {
-      return NextResponse.json(
-        { error: 'Name and locations are required' },
-        { status: 400 }
-      );
-    }
+export const POST = withErrorHandling(
+  withValidation(createSessionSchema)(async (request) => {
+    const { name, locations, createdBy } = request.validatedData;
 
     // Create a new stocktake session
     const session = await prisma.stocktakeSession.create({
       data: {
         name: `Stocktake - ${name}`,
         status: 'In Progress',
-        createdBy: createdBy || name,
+        createdBy: createdBy,
         createdAt: new Date(),
       },
     });
@@ -28,7 +21,25 @@ export async function POST(request: NextRequest) {
     console.log('Created stocktake session:', session.id);
 
     // Link uploaded files to this session for the selected locations
-    await prisma.uploadedFile.updateMany({
+    console.log('Linking files for locations:', locations);
+    console.log('Session ID:', session.id);
+
+    // First, check what files exist for these locations
+    const existingFiles = await prisma.uploadedFile.findMany({
+      where: {
+        location: {
+          in: locations
+        }
+      },
+      select: {
+        id: true,
+        location: true,
+        stocktakeSessionId: true
+      }
+    });
+    console.log('Existing files for locations:', existingFiles);
+
+    const updatedFiles = await prisma.uploadedFile.updateMany({
       where: {
         location: {
           in: locations
@@ -39,18 +50,15 @@ export async function POST(request: NextRequest) {
         stocktakeSessionId: session.id
       }
     });
+    console.log('Updated files count:', updatedFiles.count);
 
-    return NextResponse.json({ 
-      sessionId: session.id,
-      message: 'Stocktake session created successfully' 
-    });
-  } catch (error) {
-    console.error('Error creating stocktake session:', error);
-    return NextResponse.json(
-      { error: 'Failed to create stocktake session' },
-      { status: 500 }
+    return ApiResponseBuilder.success(
+      {
+        sessionId: session.id,
+        linkedFiles: updatedFiles.count
+      },
+      'Stocktake session created successfully',
+      201
     );
-  } finally {
-    await prisma.$disconnect();
-  }
-}
+  })
+);

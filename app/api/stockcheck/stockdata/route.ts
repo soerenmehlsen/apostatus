@@ -1,12 +1,29 @@
-import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+//import { NextRequest } from 'next/server';
+import { db as prisma } from '@/lib/db';
+import { Prisma } from '@prisma/client';
+import { stockDataQuerySchema } from '@/lib/validations/stockcheck';
+import { ApiResponseBuilder } from '@/lib/api-response';
+import { withValidation, withErrorHandling } from '@/lib/api-middleware';
+import { LOCATION_MAP } from '@/types/api';
 
-const prisma = new PrismaClient();
+export const GET = withErrorHandling(
+  withValidation(stockDataQuerySchema)(async (request) => {
+    const { location, sessionId } = request.validatedData;
 
-export async function GET() {
-  try {
-    // Get all products from uploaded files
+    // Build dynamic where clause
+    const whereClause: Prisma.ProductWhereInput = {}; 
+    if (location) {
+      whereClause.location = location;
+    }
+    if (sessionId) {
+      whereClause.file = {
+        stocktakeSessionId: sessionId
+      };
+    }
+
+    // Get all products from uploaded files with optimized query
     const products = await prisma.product.findMany({
+      where: whereClause,
       select: {
         id: true,
         name: true,
@@ -20,37 +37,27 @@ export async function GET() {
       }
     });
 
-    // Get unique locations from products
-    const locationIds = [...new Set(products.map((p: any) => p.location))];
+    // Get unique locations from products (filter out null values)
+    const locationIds = [...new Set(
+      products
+        .map(p => p.location)
+        .filter((location): location is string => location !== null)
+    )];
+
     const locations = locationIds.map(id => ({
       id,
-      name: getLocationName(id as string)
+      name: getLocationName(id)
     }));
 
-    return NextResponse.json({
+    return ApiResponseBuilder.success({
       products,
-      locations
+      locations,
+      totalProducts: products.length
     });
-  } catch (error) {
-    console.error('Error fetching stocktake data:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch stocktake data' },
-      { status: 500 }
-    );
-  } finally {
-    await prisma.$disconnect();
-  }
-}
+  })
+);
 
 // Helper function to get location names
 function getLocationName(id: string): string {
-  const locationMap: Record<string, string> = {
-    '101': 'Main Floor',
-    '102': 'Back Storage',
-    '103': 'Refrigerator',
-    '104': 'Controlled Substances',
-    '105': 'OTC Section',
-    '111': 'Emergency Kit'
-  };
-  return locationMap[id] || `Location ${id}`;
+  return LOCATION_MAP[id] || `Location ${id}`;
 }

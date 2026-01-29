@@ -1,12 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db as prisma } from '@/lib/db';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { sessionId, completedBy } = body;
+    const { sessionId } = body;
 
     // Update session status to completed
     const updatedSession = await prisma.stocktakeSession.update({
@@ -28,7 +26,5 @@ export async function POST(request: NextRequest) {
       { error: 'Failed to complete stocktake' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

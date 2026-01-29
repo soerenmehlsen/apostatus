@@ -1,16 +1,24 @@
+"use client";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import type { StocktakeSession, DashboardStats, BadgeVariant } from "@/types/dashboard";
+import type { DashboardSession, DashboardStats, BadgeVariant } from "@/types/dashboard";
 
-export const useDashboard = () => {
-  const [sessions, setSessions] = useState<StocktakeSession[]>([]);
-  const [stats, setStats] = useState<DashboardStats>({
-    totalSessions: 0,
-    completedSessions: 0,
-    reviewSessions: 0,
-    needsReview: 0
-  });
-  const [isLoading, setIsLoading] = useState(true);
+interface UseDashboardProps {
+  initialSessions?: DashboardSession[];
+  initialStats?: DashboardStats;
+}
+
+export const useDashboard = (props?: UseDashboardProps) => {
+  const [sessions, setSessions] = useState<DashboardSession[]>(props?.initialSessions || []);
+  const [stats, setStats] = useState<DashboardStats>(
+    props?.initialStats || {
+      needsReview: 0,
+      completedSessions: 0,
+      totalSessions: 0,
+      reviewSessions: 0
+    }
+  );
+  const [isLoading, setIsLoading] = useState(!props?.initialSessions);
   const [error, setError] = useState<string | null>(null);
 
   const fetchDashboardData = useCallback(async () => {
@@ -74,8 +82,11 @@ export const useDashboard = () => {
   }, []);
 
   useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
+    // Only fetch if we don't have initial data
+    if (!props?.initialSessions && !props?.initialStats) {
+      fetchDashboardData();
+    }
+  }, [fetchDashboardData, props?.initialSessions, props?.initialStats]);
 
   return {
     sessions,

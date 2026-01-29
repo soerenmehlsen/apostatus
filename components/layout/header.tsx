@@ -7,7 +7,7 @@ export function Header() {
     <header className="border-b px-6 py-4">
       <div className="flex items-center justify-between">
         {/* Left section */}
-        <Link href="/">
+        <Link href="/" prefetch={true}>
           <div className="flex items-center space-x-2 sm:space-x-3">
             {/* Logo */}
             <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
@@ -17,6 +17,7 @@ export function Header() {
                 width={35}
                 height={35}
                 className="w-full h-full object-contain"
+                priority
               />
             </div>
             {/* Title */}

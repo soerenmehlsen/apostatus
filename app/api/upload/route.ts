@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseCSV, ProductData } from '@/lib/csv-parser';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db as prisma } from '@/lib/db';
 
 
 export async function POST(request: NextRequest) {
@@ -81,29 +79,32 @@ export async function POST(request: NextRequest) {
       { error: 'Failed to process upload' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
 export async function GET() {
   try {
+    // Only fetch essential file data without products (use productCount instead)
     const files = await prisma.uploadedFile.findMany({
-      include: {
-        products: true
+      select: {
+        id: true,
+        filename: true,
+        uploadDate: true,
+        location: true,
+        productCount: true,
+        stocktakeSessionId: true
       },
       orderBy: {
         uploadDate: 'desc'
       }
     });
 
-    const formattedFiles = files.map((file: any) => ({
+    const formattedFiles = files.map(file => ({
       id: file.id,
       filename: file.filename,
       uploadDate: file.uploadDate.toISOString(),
       location: file.location,
       productCount: file.productCount,
-      products: file.products,
     }));
 
     return NextResponse.json({ files: formattedFiles });
@@ -113,8 +114,6 @@ export async function GET() {
       { error: 'Failed to fetch files' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -139,7 +138,5 @@ export async function DELETE(request: NextRequest) {
       { error: 'Failed to delete file' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }

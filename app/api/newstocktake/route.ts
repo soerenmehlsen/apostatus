@@ -1,37 +1,51 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { db as prisma } from '@/lib/db';
 
 
 export async function GET() {
   try {
     console.log('Starting stocktake data fetch...');
     
-    const files = await prisma.uploadedFile.findMany({
-      orderBy: {
-        uploadDate: 'desc', // Changed from 'location' to match your upload API
-      },
-    });
+    // Use Promise.all to fetch data concurrently
+    const [files, locationData] = await Promise.all([
+      prisma.uploadedFile.findMany({
+        select: {
+          id: true,
+          filename: true,
+          uploadDate: true,
+          location: true,
+          productCount: true,
+        },
+        orderBy: {
+          uploadDate: 'desc'
+        },
+      }),
+      // Get unique locations more efficiently using groupBy
+      prisma.product.groupBy({
+        by: ['location'],
+        _count: {
+          location: true
+        },
+        where: {
+          location: {
+            not: null
+          }
+        }
+      })
+    ]);
+    
     console.log('Files fetched:', files.length);
+    console.log('Locations found:', locationData.length);
 
-    // Get all products to extract unique locations
-    const products = await prisma.product.findMany({
-      select: {
-        location: true,
-      },
-      distinct: ['location'],
-    });
-    console.log('Products fetched:', products.length);
-
-    // Extract unique locations from products
-    const locations = products.map((product: { location: string }) => ({
-      id: product.location,
-      name: getLocationName(product.location),
+    // Extract unique locations from groupBy result
+    const locations = locationData.map(item => ({
+      id: item.location,
+      name: getLocationName(item.location),
+      productCount: item._count.location
     }));
 
     return NextResponse.json({ 
-      files: files.map((file: any) => ({
+      files: files.map(file => ({
         id: file.id,
         filename: file.filename,
         uploadDate: file.uploadDate.toISOString(),
@@ -46,13 +60,12 @@ export async function GET() {
       { error: 'Failed to fetch stocktake data' },
       { status: 500 }
     );
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
 // Helper function to get location names
-function getLocationName(locationId: string): string {
+function getLocationName(locationId: string | null): string {
+  if (!locationId) return 'Unknown';
   const locationNames: Record<string, string> = {
     '101': 'Main Floor',
     '102': 'Back Storage',
