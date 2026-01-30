@@ -1,10 +1,11 @@
 import { Suspense } from 'react';
 import UploadClient from '@/components/upload/uploadClient';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { getBaseUrl } from '@/lib/url-helper';
 
 async function getUploadedFiles() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/upload`, {
+    const response = await fetch(`${getBaseUrl()}/api/upload`, {
       next: { revalidate: 0 }
     });
     const data = await response.json();

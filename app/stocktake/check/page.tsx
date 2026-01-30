@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import StockCheckClient from '@/components/stocktake/stockCheckClient';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { getBaseUrl } from '@/lib/url-helper';
 
 interface PageProps {
   searchParams: Promise<{
@@ -17,7 +18,7 @@ async function getStockCheckData(sessionId?: string) {
       searchParams.append('sessionId', sessionId);
     }
 
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/stockcheck/stockdata?${searchParams.toString()}`, {
+    const response = await fetch(`${getBaseUrl()}/api/stockcheck/stockdata?${searchParams.toString()}`, {
       next: { revalidate: 0 }
     });
     const data = await response.json();
