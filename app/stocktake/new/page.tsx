@@ -1,10 +1,11 @@
 import { Suspense } from 'react';
 import NewStocktakeClient from '@/components/stocktake/newStocktakeClient';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
+import { getBaseUrl } from '@/lib/url-helper';
 
 async function getStocktakeData() {
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000'}/api/newstocktake`, {
+    const response = await fetch(`${getBaseUrl()}/api/newstocktake`, {
       next: { revalidate: 0 }
     });
     const data = await response.json();
