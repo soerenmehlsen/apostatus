@@ -31,8 +31,14 @@ jobs:
 
       - name: Create deployment package
         run: |
-          zip -r deploy.zip . \
-            -x ".git/*" ".github/*" "node_modules/*" ".next/cache/*"
+          mkdir -p deploy
+          cp -r .next deploy/
+          cp -r public deploy/
+          cp package*.json deploy/
+          cp next.config.* deploy/ 2>/dev/null || :
+          
+          cd deploy
+          zip -r ../deploy.zip .
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4.5.0
@@ -69,3 +75,4 @@ jobs:
           package: deploy.zip
 
           
+
