@@ -34,6 +34,7 @@ jobs:
           mkdir -p deploy
           cp -r .next deploy/
           cp -r public deploy/
+          cp -r node_modules deploy/
           cp package*.json deploy/
           cp next.config.* deploy/ 2>/dev/null || :
           
@@ -75,4 +76,5 @@ jobs:
           package: deploy.zip
 
           
+
 
