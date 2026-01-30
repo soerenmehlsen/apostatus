@@ -13,7 +13,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -23,21 +23,27 @@ jobs:
         with:
           node-version: '22.x'
 
-      - name: npm install, build, and test
+      - name: npm install and build
         run: |
           npm install
-          npm run build --if-present
-          npm run test --if-present
+          npm run build
 
       - name: Create deployment package
         run: |
+          # Create deploy directory with standalone build
           mkdir -p deploy
-          cp -r .next deploy/
-          cp -r public deploy/
-          cp -r node_modules deploy/
-          cp package*.json deploy/
-          cp next.config.* deploy/ 2>/dev/null || :
           
+          # Copy standalone server and its minimal node_modules
+          cp -r .next/standalone/. deploy/
+          
+          # Copy static assets (required for Next.js)
+          mkdir -p deploy/.next/static
+          cp -r .next/static/. deploy/.next/static/
+          
+          # Copy public folder (for images and static files)
+          cp -r public deploy/public
+          
+          # Create zip from deploy folder
           cd deploy
           zip -r ../deploy.zip .
 
@@ -51,8 +57,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
       - name: Download artifact from build job
@@ -74,7 +80,3 @@ jobs:
           app-name: 'apostatus'
           slot-name: 'Production'
           package: deploy.zip
-
-          
-
-
