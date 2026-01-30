@@ -1,36 +1,263 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+#  <img width="40" height="40" alt="ApoStatus_Logo" src="https://github.com/user-attachments/assets/bbfce373-7752-4905-996a-747a99503613" /> ApoStatus
 
-## Getting Started
+A modern pharmacy inventory management and stocktake system built to streamline pharmacy operations, track inventory across multiple locations, and manage stock discrepancies efficiently.
 
-First, run the development server:
+## 📋 Description
+
+ApoStatus is a full-stack web application designed for pharmacies to manage their inventory through structured stocktake sessions. The system allows pharmacy staff to upload product data, conduct stock checks across different locations, review discrepancies, and maintain accurate inventory records. With real-time tracking and comprehensive reporting, ApoStatus helps pharmacies reduce stock errors and improve operational efficiency.
+
+## 💡 Benefits
+
+### For Pharmacy Management
+- **Reduce Inventory Losses** - Identify discrepancies early and minimize stock shrinkage through systematic tracking
+- **Improve Accuracy** - Eliminate manual counting errors with digital recording and automatic variance calculation
+- **Save Time** - Complete stocktakes faster with intuitive interfaces and bulk upload capabilities
+- **Better Decision Making** - Access real-time inventory data and historical trends for informed purchasing decisions
+- **Compliance Ready** - Maintain detailed audit trails for regulatory requirements and controlled substances tracking
+- **Cost Control** - Track inventory value variance to identify patterns of waste or theft
+
+### For Pharmacy Staff
+- **Easy to Use** - Intuitive interface requires minimal training, staff can start counting in minutes
+- **Mobile Friendly** - Conduct stock checks on tablets while moving through the pharmacy
+- **Quick Entry** - Fast quantity adjustment with +/- buttons and "set to expected" shortcuts
+- **Real-Time Progress** - Visual progress tracking shows exactly how much work remains
+- **Error Prevention** - Built-in validation prevents common mistakes and duplicate entries
+- **Flexible Workflow** - Pause and resume stocktakes at any time without losing progress
+- **Multi-Location Support** - Easily switch between different pharmacy areas without confusion
+- **No Paper Trail** - Eliminate clipboard management and manual data entry headaches
+
+### For Operations
+- **Centralized Data** - All inventory information stored securely in one place
+- **Session Management** - Track multiple concurrent stocktakes across different locations or staff members
+- **Automated Reporting** - Generate variance reports instantly without manual calculations
+- **Scalable** - Works for single pharmacies or multi-location operations
+- **Integration Ready** - CSV import for compatibility with existing pharmacy management systems
+
+## ✨ Features
+
+### 📊 Dashboard
+- View all stocktake sessions with status tracking (In Progress, Review, Completed)
+- Real-time statistics on active sessions and inventory status
+- Quick access to recent stocktake activities
+
+### 📤 File Upload Management
+- Upload product inventory files with location mapping
+- Automatic product count extraction
+- File history with upload date tracking
+- Location-based file organization
+
+### 🔍 Stock Check System
+- Create new stocktake sessions for specific locations
+- Product search and lookup by SKU or name
+- Progress tracking for each stocktake session
+- Multi-location support with predefined location mappings
+
+### 📈 Review & Reporting
+- Stocktake review interface
+- Automatic variance calculation (expected vs counted quantities)
+- Value-based discrepancy reporting
+- Identify missing items and overstocked products
+
+### 🎨 User Experience
+- Dark/Light theme support with system preference detection
+- Responsive design for desktop and tablet devices
+- Loading states and error handling
+
+## 🛠️ Tech Stack
+
+### Frontend
+- **Framework:** [Next.js 16](https://nextjs.org/) (React 19)
+- **Styling:** [Tailwind CSS 4](https://tailwindcss.com/) with custom configuration
+- **UI Components:** [Radix UI](https://www.radix-ui.com/) primitives
+- **Icons:** [Lucide React](https://lucide.dev/)
+- **Theme:** [next-themes](https://github.com/pacocoursey/next-themes)
+- **Type Safety:** TypeScript 5
+
+### Backend
+- **Runtime:** Node.js 20+
+- **API Routes:** Next.js API Routes
+- **Database:** SQL Server (Azure SQL)
+- **ORM:** [Prisma 6](https://www.prisma.io/)
+- **Authentication:** Azure MSAL (Microsoft Authentication Library)
+- **Validation:** [Zod](https://zod.dev/)
+
+### DevOps & Tools
+- **CI/CD:** GitHub Actions
+- **Hosting:** Azure App Service
+- **Linting:** ESLint 9
+- **Development:** Turbopack (Next.js)
+- **Database Management:** Prisma Studio
+- **Version Control:** Git
+
+## 🗄️ Database Schema
+
+The application uses four main models:
+
+- **StocktakeSession** - Manages stocktake sessions with status tracking
+- **UploadedFile** - Stores uploaded inventory files with location data
+- **Product** - Contains product information including SKU, name, quantity, and pricing
+- **StockCheck** - Records individual stock checks with variance calculations
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+- Node.js 20 or higher
+- npm, yarn, pnpm, or bun
+- SQL Server database (Azure SQL or local instance)
+- Azure account for authentication (optional)
+
+### Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/soerenmehlsen/apostatus.git
+   cd apostatus
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   # or
+   yarn install
+   # or
+   pnpm install
+   ```
+
+3. **Set up environment variables**
+   
+   Create a `.env` file in the root directory:
+   ```env
+   DATABASE_URL="sqlserver://your-server.database.windows.net:1433;database=your-db;user=your-user;password=your-password;encrypt=true"
+   ```
+
+4. **Initialize the database**
+   ```bash
+   npm run db:generate
+   npm run db:push
+   ```
+
+5. **Run the development server**
+   ```bash
+   npm run dev
+   ```
+
+6. **Open your browser**
+   
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+### Database Commands
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+# Generate Prisma Client
+npm run db:generate
+
+# Push schema changes to database
+npm run db:push
+
+# Run database migrations
+npm run db:migrate
+
+# Open Prisma Studio (database GUI)
+npm run db:studio
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📁 Project Structure
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```
+apostatus/
+├── app/                    # Next.js App Router
+│   ├── api/               # API routes
+│   ├── dashboard/         # Dashboard page
+│   ├── stocktake/         # Stocktake pages (new, check)
+│   ├── review/            # Review page
+│   └── upload/            # Upload page
+├── components/            # React components
+│   ├── dashboard/         # Dashboard components
+│   ├── layout/            # Layout components (header, nav)
+│   ├── review/            # Review components
+│   ├── stocktake/         # Stocktake components
+│   ├── ui/                # Reusable UI components (shadcn/ui)
+│   └── upload/            # Upload components
+���── hooks/                 # Custom React hooks
+├── lib/                   # Utility functions and helpers
+├── prisma/                # Prisma schema and migrations
+├── public/                # Static assets
+└── types/                 # TypeScript type definitions
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 🔧 Configuration
 
-## Learn More
+### Location Mapping
 
-To learn more about Next.js, take a look at the following resources:
+Locations are predefined in the system:
+- **101** - Main Floor
+- **102** - Back Storage
+- **103** - Refrigerator
+- **104** - Controlled Substances
+- **105** - OTC Section
+- **111** - Emergency Kit
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Edit location mappings in `types/api.ts`.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 📝 Scripts
 
-## Deploy on Vercel
+```bash
+npm run dev          # Start development server with Turbopack
+npm run build        # Build for production
+npm run start        # Start production server
+npm run lint         # Run ESLint
+npm run db:generate  # Generate Prisma Client
+npm run db:push      # Push schema to database
+npm run db:migrate   # Run database migrations
+npm run db:studio    # Open Prisma Studio
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🚢 Deployment
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Azure App Service (Current Hosting)
+
+ApoStatus is deployed on Azure App Service with continuous deployment via GitHub Actions.
+
+**Prerequisites:**
+- Azure subscription
+- Azure App Service instance
+- Azure SQL Database
+
+**Environment Variables (Azure App Service Configuration):**
+```bash
+DATABASE_URL="sqlserver://your-server.database.windows.net:1433;database=your-db;user=your-user;password=your-password;encrypt=true"
+PORT=8080  # or your preferred port
+NODE_ENV=production
+
+### Manual Deployment
+
+1. Build the application:
+   ```bash
+   npm run build
+   ```
+
+2. Set the `PORT` environment variable (if needed)
+
+3. Start the production server:
+   ```bash
+   npm run start
+   ```
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is private and proprietary.
+
+## 👤 Author
+
+**Søren Mehlsen** - [@soerenmehlsen](https://github.com/soerenmehlsen)
+
+## 🙏 Acknowledgments
+
+- Built with [Next.js](https://nextjs.org/)
+- UI components from [shadcn/ui](https://ui.shadcn.com/)
+- Icons by [Lucide](https://lucide.dev/)
