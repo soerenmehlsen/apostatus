@@ -12,7 +12,7 @@ export function Header() {
             {/* Logo */}
             <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
               <Image
-                src="/ApoStatus_Logo.png"
+                src="/ApoStatusLogo.png"
                 alt=""
                 width={35}
                 height={35}
