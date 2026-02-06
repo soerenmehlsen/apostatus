@@ -8,30 +8,14 @@ ApoStatus is a full-stack web application designed for pharmacies to manage thei
 
 ## 💡 Benefits
 
-### For Pharmacy Management
-- **Reduce Inventory Losses** - Identify discrepancies early and minimize stock shrinkage through systematic tracking
-- **Improve Accuracy** - Eliminate manual counting errors with digital recording and automatic variance calculation
-- **Save Time** - Complete stocktakes faster with intuitive interfaces and bulk upload capabilities
-- **Better Decision Making** - Access real-time inventory data and historical trends for informed purchasing decisions
-- **Compliance Ready** - Maintain detailed audit trails for regulatory requirements and controlled substances tracking
-- **Cost Control** - Track inventory value variance to identify patterns of waste or theft
-
-### For Pharmacy Staff
 - **Easy to Use** - Intuitive interface requires minimal training, staff can start counting in minutes
-- **Mobile Friendly** - Conduct stock checks on tablets while moving through the pharmacy
+- **Tablet Friendly** - Conduct stock checks on tablets while moving through the pharmacy
 - **Quick Entry** - Fast quantity adjustment with +/- buttons and "set to expected" shortcuts
 - **Real-Time Progress** - Visual progress tracking shows exactly how much work remains
 - **Error Prevention** - Built-in validation prevents common mistakes and duplicate entries
 - **Flexible Workflow** - Pause and resume stocktakes at any time without losing progress
 - **Multi-Location Support** - Easily switch between different pharmacy areas without confusion
 - **No Paper Trail** - Eliminate clipboard management and manual data entry headaches
-
-### For Operations
-- **Centralized Data** - All inventory information stored securely in one place
-- **Session Management** - Track multiple concurrent stocktakes across different locations or staff members
-- **Automated Reporting** - Generate variance reports instantly without manual calculations
-- **Scalable** - Works for single pharmacies or multi-location operations
-- **Integration Ready** - CSV import for compatibility with existing pharmacy management systems
 
 ## ✨ Features
 
