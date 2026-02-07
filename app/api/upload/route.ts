@@ -1,29 +1,33 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { parseCSV, ProductData } from '@/lib/csv-parser';
-import { db as prisma } from '@/lib/db';
-
+import { NextRequest, NextResponse } from "next/server";
+import { parseCSV, ProductData } from "@/lib/csv-parser";
+import { db as prisma } from "@/lib/db";
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const files = formData.getAll('files') as File[];
+    const files = formData.getAll("files") as File[];
 
     const results = [];
-    
+
+    // Validate and process each file
     for (const file of files) {
-      if (!file.name.endsWith('.csv')) {
+      if (!file.name.endsWith(".csv")) {
         return NextResponse.json(
           { error: `File ${file.name} is not a CSV file` },
-          { status: 400 }
+          { status: 400 },
         );
       }
-      
-      const content = await file.text();
+
+      // Decode file as ISO-8859-1 (Latin-1)
+      const arrayBuffer = await file.arrayBuffer();
+      const decoder = new TextDecoder("iso-8859-1");
+      const content = decoder.decode(arrayBuffer);
+
       const products = parseCSV(content);
-      
+
       // Extract location from first product (assuming all products in file have same location)
-      const location = products.length > 0 ? products[0].location : 'Unknown';
-      
+      const location = products.length > 0 ? products[0].location : "Unknown";
+
       // Save to database
       try {
         // Create the uploaded file record
@@ -42,12 +46,12 @@ export async function POST(request: NextRequest) {
                 location: product.location,
                 expectedQty: product.antal, // Set expected = imported quantity initially
                 // countedQty and variance will be null until stock check is performed
-              }))
-            }
+              })),
+            },
           },
           include: {
             products: true,
-          }
+          },
         });
 
         results.push({
@@ -55,29 +59,27 @@ export async function POST(request: NextRequest) {
           filename: uploadedFile.filename,
           location: uploadedFile.location,
           productCount: uploadedFile.productCount,
-          uploadDate: uploadedFile.uploadDate.toISOString()
+          uploadDate: uploadedFile.uploadDate.toISOString(),
         });
-
       } catch (dbError) {
-        console.error('Database error:', dbError);
+        console.error("Database error:", dbError);
         return NextResponse.json(
           { error: `Failed to save data to database: ${dbError}` },
-          { status: 500 }
+          { status: 500 },
         );
       }
     }
-    
-    return NextResponse.json({ 
-      success: true, 
+
+    return NextResponse.json({
+      success: true,
       files: results,
-      message: `Successfully uploaded ${files.length} file(s) and saved ${results.reduce((sum, r) => sum + r.productCount, 0)} products to database`
+      message: `Successfully uploaded ${files.length} file(s) and saved ${results.reduce((sum, r) => sum + r.productCount, 0)} products to database`,
     });
-    
   } catch (error) {
-    console.error('Upload error:', error);
+    console.error("Upload error:", error);
     return NextResponse.json(
-      { error: 'Failed to process upload' },
-      { status: 500 }
+      { error: "Failed to process upload" },
+      { status: 500 },
     );
   }
 }
@@ -92,14 +94,14 @@ export async function GET() {
         uploadDate: true,
         location: true,
         productCount: true,
-        stocktakeSessionId: true
+        stocktakeSessionId: true,
       },
       orderBy: {
-        uploadDate: 'desc'
-      }
+        uploadDate: "desc",
+      },
     });
 
-    const formattedFiles = files.map(file => ({
+    const formattedFiles = files.map((file) => ({
       id: file.id,
       filename: file.filename,
       uploadDate: file.uploadDate.toISOString(),
@@ -109,10 +111,10 @@ export async function GET() {
 
     return NextResponse.json({ files: formattedFiles });
   } catch (error) {
-    console.error('Error fetching files:', error);
+    console.error("Error fetching files:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch files' },
-      { status: 500 }
+      { error: "Failed to fetch files" },
+      { status: 500 },
     );
   }
 }
@@ -120,23 +122,23 @@ export async function GET() {
 export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const fileId = searchParams.get('id');
-    
+    const fileId = searchParams.get("id");
+
     if (!fileId) {
-      return NextResponse.json({ error: 'File ID required' }, { status: 400 });
+      return NextResponse.json({ error: "File ID required" }, { status: 400 });
     }
-    
+
     // Delete the file and all related products (cascade delete)
     await prisma.uploadedFile.delete({
-      where: { id: fileId }
+      where: { id: fileId },
     });
-    
+
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting file:', error);
+    console.error("Error deleting file:", error);
     return NextResponse.json(
-      { error: 'Failed to delete file' },
-      { status: 500 }
+      { error: "Failed to delete file" },
+      { status: 500 },
     );
   }
 }

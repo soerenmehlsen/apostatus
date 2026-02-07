@@ -10,7 +10,7 @@ export function Header() {
         <Link href="/" prefetch={true}>
           <div className="flex items-center space-x-2 sm:space-x-3">
             {/* Logo */}
-            <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center shrink-0">
               <Image
                 src="/ApoStatusLogo.png"
                 alt=""
@@ -34,7 +34,7 @@ export function Header() {
             Mega Syd Apotek
           </span>
           {/* Avatar */}
-          <div className="w-8 h-8 bg-muted-foreground/60 rounded-full flex items-center justify-center flex-shrink-0 hover:bg-muted-foreground/80 transition-colors">
+          <div className="w-8 h-8 bg-muted-foreground/60 rounded-full flex items-center justify-center shrink-0 hover:bg-muted-foreground/80 transition-colors">
             <User size={16} className="text-white" />
           </div>
         </div>
