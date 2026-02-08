@@ -1,4 +1,5 @@
 "use client";
+import { useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -18,16 +19,22 @@ import StatsCard from "@/components/dashboard/statsCard";
 import Loading from "@/components/dashboard/loading";
 import SessionTableRow from "@/components/dashboard/tableRow";
 import { useDashboard } from "@/hooks/useDashboard";
+import { useDatabaseStatus } from "@/hooks/useDatabaseStatus";
 import { DashboardSession, DashboardStats } from "@/types/dashboard";
+import { toast } from "sonner";
+
+const DATABASE_STATUS_TOAST_ID = "database-status";
 
 interface DashboardClientProps {
   initialSessions?: DashboardSession[];
   initialStats?: DashboardStats;
+  initialDatabaseConnected?: boolean;
 }
 
 export default function DashboardClient({ 
   initialSessions, 
-  initialStats 
+  initialStats,
+  initialDatabaseConnected = true,
 }: DashboardClientProps) {
   const {
     sessions,
@@ -41,6 +48,31 @@ export default function DashboardClient({
     initialSessions, 
     initialStats 
   });
+  const shouldShowDatabaseStatus = !initialDatabaseConnected && sessions.length === 0;
+  const { databaseStatus } = useDatabaseStatus(shouldShowDatabaseStatus);
+
+  // Show toast notifications based on database status
+  useEffect(() => {
+    if (!shouldShowDatabaseStatus) {
+      toast.dismiss(DATABASE_STATUS_TOAST_ID);
+      return;
+    }
+
+    // If the database is starting, it will show a loading toast. 
+    if (databaseStatus === "starting") {
+      toast.loading("Database is starting up. Waiting for connection...", {
+        id: DATABASE_STATUS_TOAST_ID,
+        duration: Infinity,
+      });
+      return;
+    }
+
+    // If the database is running, it will show a success toast 
+    toast.success("Database is running. Please restart the site to load dashboard data.", {
+      id: DATABASE_STATUS_TOAST_ID,
+      duration: 12000,
+    });
+  }, [databaseStatus, shouldShowDatabaseStatus]);
 
   // Show loading state while fetching data
   if (isLoading && !sessions.length) {

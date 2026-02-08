@@ -5,6 +5,7 @@ import { db as prisma } from '@/lib/db';
 export async function getInitialDashboardData(): Promise<{
   sessions: DashboardSession[];
   stats: DashboardStats;
+  databaseConnected: boolean;
 }> {
   const fallbackData = {
     sessions: [],
@@ -14,6 +15,7 @@ export async function getInitialDashboardData(): Promise<{
       totalSessions: 0,
       reviewSessions: 0,
     },
+    databaseConnected: false,
   };
 
   try {
@@ -50,7 +52,7 @@ export async function getInitialDashboardData(): Promise<{
       })
     ]);
 
-    // Calculate stats efficiently from aggregation result
+    // Calculate stats from aggregation result
     const statsMap = sessionStats.reduce((acc, stat) => {
       acc[stat.status.toLowerCase()] = stat._count.id;
       return acc;
@@ -60,9 +62,9 @@ export async function getInitialDashboardData(): Promise<{
     const completedSessions = statsMap.completed || 0;
     const reviewSessions = statsMap.review || 0;
 
-    // Format the data for the dashboard (using _count for performance)
+    // Format the data for the dashboard sessions
     const formattedSessions: DashboardSession[] = stocktakeSessions.map(session => ({
-      id: session.id,
+      id: session.id, 
       name: session.createdBy || 'Unknown',
       date: session.createdAt.toISOString().split('T')[0],
       status: session.status as SessionStatus,
@@ -79,12 +81,13 @@ export async function getInitialDashboardData(): Promise<{
         completedSessions,
         reviewSessions,
         needsReview: reviewSessions
-      }
+      },
+      databaseConnected: true,
     };
     
   } catch (error) {
     console.error('Server: Error fetching initial dashboard data:', error);
-    // Always return fallback data instead of throwing
+    // Return fallback data 
     return fallbackData;
   }
 }
