@@ -34,14 +34,12 @@ import { cn } from "@/lib/utils";
 import {
   getLocationNames,
   getStatusMeta,
+  getNextStocktakeLabel,
   isInProgress,
 } from "@/lib/dashboard-display";
 import { toast } from "sonner";
 
 const DATABASE_STATUS_TOAST_ID = "database-status";
-
-/** Static for now — the next scheduled stocktake. */
-const NEXT_STOCKTAKE_LABEL = "maj 2026";
 
 type StatusFilter = "all" | "in progress" | "review" | "completed";
 
@@ -98,6 +96,8 @@ export default function DashboardClient({
     0,
     stats.totalSessions - stats.completedSessions - stats.reviewSessions
   );
+
+  const nextStocktakeLabel = useMemo(() => getNextStocktakeLabel(), []);
 
   const activeSessions = useMemo(
     () => sessions.filter((s) => isInProgress(s.status)),
@@ -175,7 +175,7 @@ export default function DashboardClient({
         />
         <StatsCard
           title="Næste lagerstatus"
-          value={NEXT_STOCKTAKE_LABEL}
+          value={nextStocktakeLabel}
           icon={CalendarDays}
           tone="bg-muted text-muted-foreground"
         />

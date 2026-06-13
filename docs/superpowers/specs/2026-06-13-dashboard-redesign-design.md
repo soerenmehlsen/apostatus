@@ -39,7 +39,8 @@ Lokationskoder vises som læsbare danske navne via en frontend-mapping (oversat
    "Ny lagerstatus" (grøn, primær) og "Upload fil" (sekundær/outline).
 2. **KPI-række:** 4 forfinede stat-kort med ikon og farveaccent:
    Igangværende (blå) · Afventer gennemsyn (gul) · Gennemført `x / y` (grøn) ·
-   Næste lagerstatus (neutral, dato).
+   Næste lagerstatus (neutral, dato — beregnes ud fra en halvårlig kadence,
+   maj/november, via `getNextStocktakeLabel`; ikke hardcoded).
 3. **"Fortsæt hvor du slap":** igangværende sessioner som fremhævede kort med
    lokations-chips, antal optalte varer, relativ starttid og stor
    "Fortsæt optælling →"-knap. Tom-tilstand hvis ingen er i gang.

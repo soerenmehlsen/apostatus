@@ -107,6 +107,35 @@ export function itemsCountedLabel(count: number): string {
   return `${count} ${count === 1 ? "vare" : "varer"} talt`;
 }
 
+/**
+ * Months (0-indexed) when a stocktake is scheduled. Stocktake runs every six
+ * months — adjust here if the cadence changes.
+ */
+export const STOCKTAKE_MONTHS = [4, 10] as const; // maj, november
+
+const monthYearFormatter = new Intl.DateTimeFormat("da-DK", {
+  month: "short",
+  year: "numeric",
+});
+
+/** The next scheduled stocktake on or after `from`. */
+export function getNextStocktake(from: Date = new Date()): Date {
+  const year = from.getFullYear();
+  const month = from.getMonth();
+  for (let y = year; y <= year + 1; y++) {
+    for (const m of STOCKTAKE_MONTHS) {
+      if (y > year || m >= month) return new Date(y, m, 1);
+    }
+  }
+  // Unreachable in practice, but keeps the return type total.
+  return new Date(year + 1, STOCKTAKE_MONTHS[0], 1);
+}
+
+/** Danish short month + year label for the next stocktake, e.g. "nov 2026". */
+export function getNextStocktakeLabel(from: Date = new Date()): string {
+  return monthYearFormatter.format(getNextStocktake(from)).replace(".", "");
+}
+
 export interface SessionAction {
   label: string;
   href: string;
