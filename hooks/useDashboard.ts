@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import { toast } from "sonner";
-import type { DashboardSession, DashboardStats, BadgeVariant } from "@/types/dashboard";
+import type { DashboardSession, DashboardStats } from "@/types/dashboard";
 
 interface UseDashboardProps {
   initialSessions?: DashboardSession[];
@@ -58,26 +58,13 @@ export const useDashboard = (props?: UseDashboardProps) => {
 
   const formatDate = useCallback((dateString: string) => {
     try {
-      return new Intl.DateTimeFormat('en-US', {
+      return new Intl.DateTimeFormat('da-DK', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
       }).format(new Date(dateString));
     } catch (error) {
       return dateString;
-    }
-  }, []);
-
-  const getBadgeVariant = useCallback((status: string): BadgeVariant => {
-    switch (status.toLowerCase()) {
-      case "in progress":
-        return "secondary";
-      case "review":
-        return "destructive";
-      case "completed":
-        return "default";
-      default:
-        return "outline";
     }
   }, []);
 
@@ -95,6 +82,5 @@ export const useDashboard = (props?: UseDashboardProps) => {
     error,
     fetchDashboardData,
     formatDate,
-    getBadgeVariant,
   };
 };

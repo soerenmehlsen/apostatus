@@ -17,8 +17,6 @@ export interface DashboardStats {
   needsReview: number;
 }
 
-export type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
-
 // Hook return types
 export interface DashboardData {
   sessions: DashboardSession[];
@@ -32,5 +30,4 @@ export interface UseDashboardReturn {
   error: string | null;
   fetchDashboardData: () => Promise<void>;
   formatDate: (dateString: string) => string;
-  getBadgeVariant: (status: string) => BadgeVariant;
 }

@@ -82,10 +82,10 @@ export interface Location {
 }
 
 export const LOCATION_MAP: Record<string, string> = {
-  '101': 'Main Floor',
-  '102': 'Back Storage',
-  '103': 'Refrigerator',
-  '104': 'Controlled Substances',
-  '105': 'OTC Section',
-  '111': 'Emergency Kit'
+  '101': 'Hovedetage',
+  '102': 'Baglager',
+  '103': 'Køleskab',
+  '104': 'Kontrollerede stoffer',
+  '105': 'Håndkøb',
+  '111': 'Nødkasse'
 } as const;
