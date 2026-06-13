@@ -8,15 +8,17 @@ interface UseDashboardProps {
   initialStats?: DashboardStats;
 }
 
+const emptyStats: DashboardStats = {
+  needsReview: 0,
+  completedSessions: 0,
+  totalSessions: 0,
+  reviewSessions: 0
+};
+
 export const useDashboard = (props?: UseDashboardProps) => {
   const [sessions, setSessions] = useState<DashboardSession[]>(props?.initialSessions || []);
   const [stats, setStats] = useState<DashboardStats>(
-    props?.initialStats || {
-      needsReview: 0,
-      completedSessions: 0,
-      totalSessions: 0,
-      reviewSessions: 0
-    }
+    props?.initialStats || emptyStats
   );
   const [isLoading, setIsLoading] = useState(!props?.initialSessions);
   const [error, setError] = useState<string | null>(null);
@@ -27,18 +29,15 @@ export const useDashboard = (props?: UseDashboardProps) => {
       setError(null);
       
       const response = await fetch('/api/dashboard');
-      const data = await response.json();
+      const payload = await response.json();
 
       if (response.ok) {
-        setSessions(data.sessions || []);
-        setStats(data.stats || {
-          totalSessions: 0,
-          completedSessions: 0,
-          reviewSessions: 0,
-          needsReview: 0
-        });
+        const dashboardData = payload?.data ?? payload;
+
+        setSessions(Array.isArray(dashboardData?.sessions) ? dashboardData.sessions : []);
+        setStats(dashboardData?.stats ?? emptyStats);
       } else {
-        const errorMessage = data.error || 'Failed to load dashboard data';
+        const errorMessage = payload?.error || 'Failed to load dashboard data';
         setError(errorMessage);
         toast.error("Failed to load dashboard data", {
           description: errorMessage,
