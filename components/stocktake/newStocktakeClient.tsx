@@ -10,11 +10,9 @@ import {
   MapPin,
   Package,
   Upload,
-  User,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { getLocationName } from "@/lib/dashboard-display";
 import { cn } from "@/lib/utils";
@@ -52,7 +50,6 @@ export default function NewStocktakeClient({
   initialFiles = [],
 }: NewStocktakeClientProps) {
   const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
-  const [initials, setInitials] = useState("");
   const router = useRouter();
   const [locations, setLocations] = useState<Location[]>(initialLocations);
   const [uploadedFiles, setUploadedFiles] =
@@ -133,14 +130,12 @@ export default function NewStocktakeClient({
     );
   };
 
-  const canStart =
-    selectedLocations.length > 0 && initials.trim().length > 0 && !isCreating;
+  const canStart = selectedLocations.length > 0 && !isCreating;
 
   const handleStartStocktake = async () => {
     if (!canStart) {
       toast.error("Mangler oplysninger", {
-        description:
-          "Skriv dine initialer og vælg mindst én lokation for at starte.",
+        description: "Vælg mindst én lokation for at starte.",
       });
       return;
     }
@@ -152,9 +147,8 @@ export default function NewStocktakeClient({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: initials,
+          name: "Stocktake",
           locations: selectedLocations,
-          createdBy: initials,
         }),
       });
 
@@ -164,7 +158,6 @@ export default function NewStocktakeClient({
         const params = new URLSearchParams({
           sessionId: data.data.sessionId,
           locations: selectedLocations.join(","),
-          initials,
         });
 
         toast.success("Lagerstatus oprettet", {
@@ -203,40 +196,11 @@ export default function NewStocktakeClient({
     <div className="mx-auto w-full max-w-4xl space-y-8 pb-28 sm:pb-8">
       <PageHeader />
 
-      {/* Step 1 — who is counting */}
-      <section className="space-y-4">
-        <StepHeading
-          step={1}
-          icon={User}
-          title="Hvem tæller op?"
-          description="Dine initialer knyttes til denne lagerstatus."
-        />
-        <Card className="py-5">
-          <div className="px-5">
-            <label
-              htmlFor="initials"
-              className="mb-2 block text-sm font-medium"
-            >
-              Initialer
-            </label>
-            <Input
-              id="initials"
-              placeholder="F.eks. SM"
-              value={initials}
-              onChange={(e) => setInitials(e.target.value)}
-              disabled={isCreating}
-              autoComplete="off"
-              className="sm:max-w-xs"
-            />
-          </div>
-        </Card>
-      </section>
-
-      {/* Step 2 — pick locations */}
+      {/* Step 1 — pick locations */}
       <section className="space-y-4">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <StepHeading
-            step={2}
+            step={1}
             icon={MapPin}
             title="Vælg lokationer"
             description="Vælg de lokationer der skal tælles op i denne status."
@@ -358,7 +322,7 @@ function PageHeader() {
             Ny lagerstatus
           </h1>
           <p className="text-sm text-muted-foreground">
-            Vælg hvem der tæller op og hvilke lokationer der skal med.
+            Vælg hvilke lokationer der skal med i denne status.
           </p>
         </div>
       </div>

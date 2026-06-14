@@ -1,8 +1,13 @@
 import { User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { auth } from "@/auth";
+import { SignOutButton } from "@/components/auth/sign-out-button";
 
-export function Header() {
+export async function Header() {
+  const session = await auth();
+  const userName = session?.user?.name ?? null;
+
   return (
     <header className="border-b px-6 py-4">
       <div className="flex items-center justify-between">
@@ -29,14 +34,16 @@ export function Header() {
 
         {/* Right section */}
         <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
-          {/* Pharmacy name */}
-          <span className="hidden sm:block font-bold text-sm lg:text-base truncate max-w-32 lg:max-w-none">
-            Mega Syd Apotek
-          </span>
+          {userName && (
+            <span className="hidden sm:block font-medium text-sm lg:text-base truncate max-w-32 lg:max-w-none">
+              {userName}
+            </span>
+          )}
           {/* Avatar */}
-          <div className="w-8 h-8 bg-muted-foreground/60 rounded-full flex items-center justify-center flex-shrink-0 hover:bg-muted-foreground/80 transition-colors">
+          <div className="w-8 h-8 bg-muted-foreground/60 rounded-full flex items-center justify-center flex-shrink-0">
             <User size={16} className="text-white" />
           </div>
+          {userName && <SignOutButton />}
         </div>
       </div>
     </header>

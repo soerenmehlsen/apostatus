@@ -66,3 +66,27 @@ If you need to rollback to the previous deployment method:
 1. Revert the changes in `next.config.ts` and `.github/workflows/main_apostatus.yml`
 2. Push the changes to trigger a new deployment
 3. Remove the custom startup command in Azure App Service (leave it empty)
+
+## Authentication (Microsoft Entra ID)
+
+Auth.js uses an Entra ID app registration for login.
+
+1. **Register the app**
+   - Entra ID → App registrations → New registration.
+   - Supported account types: single tenant (this organization only).
+2. **Add redirect URIs** (platform: Web):
+   - `http://localhost:3000/api/auth/callback/microsoft-entra-id` (local dev)
+   - `https://<prod-host>/api/auth/callback/microsoft-entra-id` (production)
+3. **Create a client secret**
+   - Certificates & secrets → New client secret → copy the value immediately.
+4. **Collect values into env**
+   - `AUTH_MICROSOFT_ENTRA_ID_ID` = Application (client) ID
+   - `AUTH_MICROSOFT_ENTRA_ID_SECRET` = the secret value
+   - `AUTH_MICROSOFT_ENTRA_ID_ISSUER` = `https://login.microsoftonline.com/<Directory (tenant) ID>/v2.0`
+   - `AUTH_SECRET` = output of `npx auth secret` (or `openssl rand -base64 33`)
+5. **Set the same values in Azure App Service**
+   - Configuration → Application settings → add all four `AUTH_*` keys → Save.
+   - `auth.ts` sets `trustHost: true` so Auth.js trusts the App Service reverse
+     proxy's Host header. If you prefer config over code, set
+     `AUTH_TRUST_HOST=true` (or `AUTH_URL=https://<prod-host>`) as an App Setting
+     instead — without one of these, production sign-in fails with `UntrustedHost`.
