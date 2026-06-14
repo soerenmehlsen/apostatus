@@ -414,20 +414,22 @@ export default function StockCheckClient({
         <EmptyState hasProducts={products.length > 0} />
       ) : (
         <>
-          {/* Desktop: table */}
+          {/* Tablet & desktop: table (iPad portrait and up) */}
           <Card className="hidden overflow-hidden py-0 md:block">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
-                  <TableHead className="px-5 py-3">Vare</TableHead>
-                  <TableHead className="px-5 py-3 text-center">
+                  <TableHead className="px-3 py-3 lg:px-5">Vare</TableHead>
+                  <TableHead className="px-3 py-3 text-center lg:px-5">
                     Forventet
                   </TableHead>
-                  <TableHead className="px-5 py-3 text-center">Optalt</TableHead>
-                  <TableHead className="px-5 py-3 text-center">
+                  <TableHead className="px-3 py-3 text-center lg:px-5">
+                    Optalt
+                  </TableHead>
+                  <TableHead className="px-3 py-3 text-center lg:px-5">
                     Afvigelse
                   </TableHead>
-                  <TableHead className="px-5 py-3 text-right">
+                  <TableHead className="px-3 py-3 text-right lg:px-5">
                     <span className="sr-only">Handling</span>
                   </TableHead>
                 </TableRow>
@@ -441,16 +443,16 @@ export default function StockCheckClient({
                     <TableRow
                       key={product.id}
                       className={cn(
-                        "[&>td]:px-5 [&>td]:py-3",
+                        "[&>td]:px-3 [&>td]:py-3 lg:[&>td]:px-5",
                         checked && "bg-primary/[0.04]"
                       )}
                     >
                       <TableCell>
-                        <div className="min-w-0">
+                        <div className="min-w-0 max-w-[180px] lg:max-w-[360px]">
                           <p className="truncate font-medium leading-tight">
                             {product.name}
                           </p>
-                          <p className="font-mono text-xs text-muted-foreground">
+                          <p className="truncate font-mono text-xs text-muted-foreground">
                             {product.sku || product.id}
                           </p>
                         </div>
@@ -485,7 +487,7 @@ export default function StockCheckClient({
             </Table>
           </Card>
 
-          {/* Mobile: cards */}
+          {/* Mobile only: cards */}
           <div className="grid grid-cols-1 gap-3 md:hidden">
             {visibleProducts.map((product) => {
               const checked = checkedProducts.has(product.id);
