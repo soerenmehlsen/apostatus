@@ -8,6 +8,24 @@ export interface ProductData {
   lagervaerdi: number;
 }
 
+/**
+ * Decode raw uploaded bytes into text. Files exported from the pharmacy/Excel
+ * system are usually Windows-1252 (Latin-1), where æøå are single bytes that
+ * become U+FFFD (�) if forced through UTF-8. We try strict UTF-8 first and fall
+ * back to Windows-1252 only when the bytes aren't valid UTF-8, so genuine UTF-8
+ * files are left untouched. A leading UTF-8 BOM is stripped.
+ */
+export function decodeFileContent(buffer: ArrayBuffer): string {
+  const bytes = new Uint8Array(buffer);
+  let text: string;
+  try {
+    text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+  } catch {
+    text = new TextDecoder("windows-1252").decode(bytes);
+  }
+  return text.replace(/^﻿/, "");
+}
+
 export function parseCSV(csvContent: string): ProductData[] {
   const lines = csvContent.split('\n');
   const products: ProductData[] = [];

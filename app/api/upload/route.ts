@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { parseCSV, ProductData } from '@/lib/csv-parser';
+import { parseCSV, decodeFileContent, ProductData } from '@/lib/csv-parser';
 import { db as prisma } from '@/lib/db';
 
 
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
         );
       }
       
-      const content = await file.text();
+      const content = decodeFileContent(await file.arrayBuffer());
       const products = parseCSV(content);
       
       // Extract location from first product (assuming all products in file have same location)
