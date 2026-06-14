@@ -6,7 +6,6 @@ import { getBaseUrl } from '@/lib/url-helper';
 interface PageProps {
   searchParams: Promise<{
     locations?: string;
-    initials?: string;
     sessionId?: string;
   }>;
 }

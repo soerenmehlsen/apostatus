@@ -86,3 +86,7 @@ Auth.js uses an Entra ID app registration for login.
    - `AUTH_SECRET` = output of `npx auth secret` (or `openssl rand -base64 33`)
 5. **Set the same values in Azure App Service**
    - Configuration → Application settings → add all four `AUTH_*` keys → Save.
+   - `auth.ts` sets `trustHost: true` so Auth.js trusts the App Service reverse
+     proxy's Host header. If you prefer config over code, set
+     `AUTH_TRUST_HOST=true` (or `AUTH_URL=https://<prod-host>`) as an App Setting
+     instead — without one of these, production sign-in fails with `UntrustedHost`.
