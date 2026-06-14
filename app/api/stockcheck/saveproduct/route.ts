@@ -97,3 +97,29 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// Remove a previously saved count when a line is un-confirmed mid-stocktake.
+export async function DELETE(request: NextRequest) {
+  try {
+    const { productId, sessionId } = await request.json();
+
+    if (!productId || !sessionId) {
+      return NextResponse.json(
+        { error: 'productId and sessionId are required' },
+        { status: 400 }
+      );
+    }
+
+    await prisma.stockCheck.deleteMany({
+      where: { productId, sessionId },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting stock check:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete stock check' },
+      { status: 500 }
+    );
+  }
+}

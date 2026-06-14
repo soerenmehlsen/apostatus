@@ -24,26 +24,29 @@ async function getStockCheckData(sessionId?: string) {
     const data = await response.json();
     return {
       products: data.data?.products || [],
-      locations: data.data?.locations || []
+      locations: data.data?.locations || [],
+      checks: data.data?.checks || []
     };
   } catch (error) {
     console.error('Failed to fetch stock check data:', error);
     return {
       products: [],
-      locations: []
+      locations: [],
+      checks: []
     };
   }
 }
 
 export default async function StockCheck({ searchParams }: PageProps) {
   const { sessionId } = await searchParams;
-  const { products, locations } = await getStockCheckData(sessionId);
+  const { products, locations, checks } = await getStockCheckData(sessionId);
 
   return (
     <Suspense fallback={<LoadingSpinner />}>
       <StockCheckClient
         initialProducts={products}
         initialLocations={locations}
+        initialChecks={checks}
       />
     </Suspense>
   );

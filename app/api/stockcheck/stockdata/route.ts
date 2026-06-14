@@ -49,9 +49,25 @@ export const GET = withErrorHandling(
       name: getLocationName(id)
     }));
 
+    // Existing counts for this session so the UI can resume where it left off.
+    const checks = sessionId
+      ? await prisma.stockCheck.findMany({
+          where: { sessionId },
+          select: {
+            productId: true,
+            countedQty: true,
+            expectedQty: true,
+            variance: true,
+            checkedBy: true,
+            status: true,
+          },
+        })
+      : [];
+
     return ApiResponseBuilder.success({
       products,
       locations,
+      checks,
       totalProducts: products.length
     });
   })

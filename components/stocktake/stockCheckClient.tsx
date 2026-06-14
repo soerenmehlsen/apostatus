@@ -49,28 +49,37 @@ interface StockCheckData {
   status: string;
 }
 
+interface ExistingCheck {
+  productId: string;
+  countedQty: number;
+  expectedQty: number;
+  variance: number;
+  checkedBy: string | null;
+  status: string;
+}
+
 interface StockCheckClientProps {
   initialProducts?: Product[];
   initialLocations?: { id: string; name: string }[];
+  initialChecks?: ExistingCheck[];
 }
 
 export default function StockCheckClient({
   initialProducts = [],
+  initialChecks = [],
 }: StockCheckClientProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
-  const [initials, setInitials] = useState("");
+  const [initials, setInitials] = useState(
+    () => initialChecks.find((c) => c.checkedBy)?.checkedBy ?? ""
+  );
   const [currentLocation, setCurrentLocation] = useState("");
   const [productCounts, setProductCounts] = useState<Record<string, number>>(
-    {}
+    () => Object.fromEntries(initialChecks.map((c) => [c.productId, c.countedQty]))
   );
   const [checkedProducts, setCheckedProducts] = useState<Set<string>>(
-    new Set()
+    () => new Set(initialChecks.map((c) => c.productId))
   );
   const [sessionId, setSessionId] = useState("");
-  const [localChecks, setLocalChecks] = useState<Map<string, StockCheckData>>(
-    new Map()
-  );
   const [isCompleting, setIsCompleting] = useState(false);
 
   const [products, setProducts] = useState<Product[]>(initialProducts);
@@ -80,15 +89,11 @@ export default function StockCheckClient({
   const router = useRouter();
 
   useEffect(() => {
-    const locationParam = searchParams.get("locations");
     const initialsParam = searchParams.get("initials");
     const sessionIdParam = searchParams.get("sessionId");
 
-    if (locationParam) {
-      const locations = locationParam.split(",");
-      setSelectedLocations(locations);
-      setCurrentLocation(locations[0]);
-    }
+    // The URL only carries initials when starting fresh; on resume we keep the
+    // value hydrated from the existing checks.
     if (initialsParam) {
       setInitials(initialsParam);
     }
@@ -96,6 +101,15 @@ export default function StockCheckClient({
       setSessionId(sessionIdParam);
     }
   }, [searchParams]);
+
+  // Hydrate counts/checked state from previously saved checks so a resumed
+  // stocktake starts exactly where it was left off.
+  const hydrateChecks = useCallback((checks: ExistingCheck[]) => {
+    if (!checks.length) return;
+    setProductCounts(Object.fromEntries(checks.map((c) => [c.productId, c.countedQty])));
+    setCheckedProducts(new Set(checks.map((c) => c.productId)));
+    setInitials((prev) => prev || (checks.find((c) => c.checkedBy)?.checkedBy ?? ""));
+  }, []);
 
   const fetchStocktakeData = useCallback(async () => {
     try {
@@ -111,6 +125,7 @@ export default function StockCheckClient({
 
       if (response.ok) {
         setProducts(data.data.products || []);
+        hydrateChecks(data.data.checks || []);
       } else {
         toast.error("Kunne ikke hente data", {
           description: data.error,
@@ -124,13 +139,48 @@ export default function StockCheckClient({
     } finally {
       setIsLoading(false);
     }
-  }, [sessionId]);
+  }, [sessionId, hydrateChecks]);
 
   useEffect(() => {
     if (!initialProducts.length && sessionId) {
       fetchStocktakeData();
     }
   }, [sessionId, initialProducts.length, fetchStocktakeData]);
+
+  // Locations are derived from the products actually loaded for this session, so
+  // resuming works without relying on URL params being passed back in.
+  const selectedLocations = useMemo(
+    () => [...new Set(products.map((p) => p.location).filter(Boolean))],
+    [products]
+  );
+
+  // Default to the first location once products are available (or if the current
+  // tab no longer exists after data loads).
+  useEffect(() => {
+    if (
+      selectedLocations.length > 0 &&
+      !selectedLocations.includes(currentLocation)
+    ) {
+      setCurrentLocation(selectedLocations[0]);
+    }
+  }, [selectedLocations, currentLocation]);
+
+  // Build the saved-check payload for a single product from current state.
+  const buildCheck = (productId: string): StockCheckData | null => {
+    const product = products.find((p) => p.id === productId);
+    if (!product) return null;
+    const countedQty = productCounts[productId] || 0;
+    const expectedQty = product.expectedQty || 0;
+    return {
+      productId,
+      sessionId,
+      expectedQty,
+      countedQty,
+      variance: countedQty - expectedQty,
+      checkedBy: initials,
+      status: "checked",
+    };
+  };
 
   const setCount = (productId: string, value: number) => {
     setProductCounts((prev) => ({
@@ -147,41 +197,59 @@ export default function StockCheckClient({
     setCount(productId, expectedQty);
   };
 
-  const handleProductCheck = (productId: string) => {
+  const handleProductCheck = async (productId: string) => {
     const product = products.find((p) => p.id === productId);
-    if (!product) return;
+    if (!product || !sessionId) return;
 
-    // Toggle off — allow re-editing a line.
+    // Toggle off — allow re-editing a line. Optimistically un-check, then
+    // remove the saved count so progress reflects reality on resume.
     if (checkedProducts.has(productId)) {
       setCheckedProducts((prev) => {
         const next = new Set(prev);
         next.delete(productId);
         return next;
       });
-      setLocalChecks((prev) => {
-        const next = new Map(prev);
-        next.delete(productId);
-        return next;
-      });
+      try {
+        const res = await fetch("/api/stockcheck/saveproduct", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ productId, sessionId }),
+        });
+        if (!res.ok) throw new Error("Failed to delete stock check");
+      } catch (error) {
+        console.error("Error removing stock check:", error);
+        toast.error("Kunne ikke fortryde optælling", {
+          description: "Prøv igen eller tjek din forbindelse.",
+        });
+        setCheckedProducts((prev) => new Set(prev).add(productId));
+      }
       return;
     }
 
-    const countedQty = productCounts[productId] || 0;
-    const expectedQty = product.expectedQty || 0;
-    const variance = countedQty - expectedQty;
+    const check = buildCheck(productId);
+    if (!check) return;
 
-    setLocalChecks((prev) =>
-      new Map(prev).set(productId, {
-        productId,
-        sessionId,
-        expectedQty,
-        countedQty,
-        variance,
-        checkedBy: initials,
-        status: "checked",
-      })
-    );
+    // Optimistically mark checked, then persist immediately so the count
+    // survives leaving and resuming the stocktake.
     setCheckedProducts((prev) => new Set(prev).add(productId));
+    try {
+      const res = await fetch("/api/stockcheck/saveproduct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(check),
+      });
+      if (!res.ok) throw new Error("Failed to save stock check");
+    } catch (error) {
+      console.error("Error saving stock check:", error);
+      toast.error("Kunne ikke gemme optælling", {
+        description: "Prøv igen eller tjek din forbindelse.",
+      });
+      setCheckedProducts((prev) => {
+        const next = new Set(prev);
+        next.delete(productId);
+        return next;
+      });
+    }
   };
 
   // Per-location progress for the location tabs.
@@ -221,13 +289,17 @@ export default function StockCheckClient({
   const isAllChecked = checkedAll === totalAll && totalAll > 0;
 
   const completeStocktake = async () => {
-    if (!isAllChecked || localChecks.size === 0) return;
+    if (!isAllChecked || checkedProducts.size === 0) return;
 
     setIsCompleting(true);
     const loadingToast = toast.loading("Afslutter lagerstatus...");
 
     try {
-      const checksArray = Array.from(localChecks.values());
+      // Re-save everything as a final safety net before completing; each line
+      // was already persisted on confirm, so this is idempotent.
+      const checksArray = Array.from(checkedProducts)
+        .map((id) => buildCheck(id))
+        .filter((c): c is StockCheckData => c !== null);
 
       const stockCheckResponse = await fetch("/api/stockcheck/saveproduct", {
         method: "POST",
