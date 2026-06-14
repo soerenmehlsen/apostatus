@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import NewStocktakeClient from '@/components/stocktake/newStocktakeClient';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { getBaseUrl } from '@/lib/url-helper';
+import { isDemoServer } from '@/lib/demo/is-demo-server';
 
 async function getStocktakeData() {
   try {
@@ -25,6 +26,14 @@ async function getStocktakeData() {
 export const dynamic = 'force-dynamic';
 
 export default async function NewStocktake() {
+  if (await isDemoServer()) {
+    return (
+      <Suspense fallback={<LoadingSpinner />}>
+        <NewStocktakeClient />
+      </Suspense>
+    );
+  }
+
   const { locations, files } = await getStocktakeData();
 
   return (

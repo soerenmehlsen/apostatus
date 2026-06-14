@@ -2,6 +2,7 @@ import { Suspense } from 'react';
 import StockCheckClient from '@/components/stocktake/stockCheckClient';
 import { LoadingSpinner } from '@/components/ui/loading-spinner';
 import { getBaseUrl } from '@/lib/url-helper';
+import { isDemoServer } from '@/lib/demo/is-demo-server';
 
 interface PageProps {
   searchParams: Promise<{
@@ -38,6 +39,16 @@ async function getStockCheckData(sessionId?: string) {
 
 export default async function StockCheck({ searchParams }: PageProps) {
   const { sessionId } = await searchParams;
+
+  if (await isDemoServer()) {
+    // Tom start-data -> klienten henter via interceptoren ud fra sessionId.
+    return (
+      <Suspense fallback={<LoadingSpinner />}>
+        <StockCheckClient />
+      </Suspense>
+    );
+  }
+
   const { products, locations, checks } = await getStockCheckData(sessionId);
 
   return (
