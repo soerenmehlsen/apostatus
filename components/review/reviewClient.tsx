@@ -33,6 +33,7 @@ import {
   formatCurrency,
   valueVarianceTone,
   valueVarianceText,
+  getVarianceReasonLabel,
 } from "@/lib/dashboard-display";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -45,6 +46,7 @@ interface CheckResult {
   countedQty: number;
   variance: number;
   value: number;
+  reason: string | null;
 }
 
 interface ReviewSession {
@@ -255,6 +257,7 @@ export default function ReviewClient({
                     <TableHead className="px-5 py-3 text-center">
                       Afvigelse
                     </TableHead>
+                    <TableHead className="px-5 py-3">Årsag</TableHead>
                     <TableHead className="px-5 py-3 text-right">Værdi</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -279,6 +282,9 @@ export default function ReviewClient({
                       </TableCell>
                       <TableCell className="text-center">
                         <VarianceBadge variance={item.variance} />
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {getVarianceReasonLabel(item.reason) || "—"}
                       </TableCell>
                       <TableCell
                         className={cn(
@@ -331,6 +337,14 @@ export default function ReviewClient({
                       {formatCurrency(item.value)}
                     </span>
                   </div>
+                  {getVarianceReasonLabel(item.reason) && (
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Årsag:{" "}
+                      <span className="text-foreground">
+                        {getVarianceReasonLabel(item.reason)}
+                      </span>
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

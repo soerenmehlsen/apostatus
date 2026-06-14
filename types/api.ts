@@ -94,3 +94,16 @@ export const LOCATION_MAP: Record<string, string> = {
   '110': 'Mærkevarer',
   '111': 'Mærkevarer'
 } as const;
+
+// Faste årsager til lagerafvigelse. Kode gemmes på StockCheck.reason; label vises i UI.
+export const VARIANCE_REASON_MAP: Record<string, string> = {
+  shrinkage: 'Svind/tyveri',
+  disposal: 'Kassation (udløbet/beskadiget)',
+  registration_error: 'Registreringsfejl',
+  delivery_error: 'Fejl i levering',
+} as const;
+
+// Bevarer rækkefølgen til dropdown-visning.
+export const VARIANCE_REASONS: { code: string; label: string }[] = Object.entries(
+  VARIANCE_REASON_MAP
+).map(([code, label]) => ({ code, label }));

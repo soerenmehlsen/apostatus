@@ -28,6 +28,7 @@ import {
   formatCurrency,
   formatDateDa,
   getLocationNames,
+  getVarianceReasonLabel,
   valueVarianceText,
   valueVarianceTone,
 } from "@/lib/dashboard-display";
@@ -70,13 +71,14 @@ export default function ArchiveDetailClient({
 
   const handleExport = () => {
     const csv = toCsv(
-      ["Vare", "Varenr.", "Forventet", "Optalt", "Afvigelse", "Værdi (DKK)"],
+      ["Vare", "Varenr.", "Forventet", "Optalt", "Afvigelse", "Årsag", "Værdi (DKK)"],
       items.map((item) => [
         item.name,
         item.article ?? "",
         item.expectedQty,
         item.countedQty,
         item.variance,
+        getVarianceReasonLabel(item.reason),
         csvNumber(item.value),
       ])
     );
@@ -193,6 +195,7 @@ export default function ArchiveDetailClient({
                     <TableHead className="px-5 py-3 text-center">
                       Afvigelse
                     </TableHead>
+                    <TableHead className="px-5 py-3">Årsag</TableHead>
                     <TableHead className="px-5 py-3 text-right">Værdi</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -219,6 +222,9 @@ export default function ArchiveDetailClient({
                       </TableCell>
                       <TableCell className="text-center">
                         <VarianceBadge variance={item.variance} />
+                      </TableCell>
+                      <TableCell className="text-sm text-muted-foreground">
+                        {getVarianceReasonLabel(item.reason) || "—"}
                       </TableCell>
                       <TableCell
                         className={cn(
@@ -273,6 +279,14 @@ export default function ArchiveDetailClient({
                       {formatCurrency(item.value)}
                     </span>
                   </div>
+                  {getVarianceReasonLabel(item.reason) && (
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      Årsag:{" "}
+                      <span className="text-foreground">
+                        {getVarianceReasonLabel(item.reason)}
+                      </span>
+                    </p>
+                  )}
                 </div>
               ))}
             </div>

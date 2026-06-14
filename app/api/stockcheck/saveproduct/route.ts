@@ -28,6 +28,7 @@ export async function POST(request: NextRequest) {
               variance: checkData.variance,
               checkedBy: checkData.checkedBy,
               status: checkData.status,
+              reason: checkData.reason ?? null,
               checkedAt: new Date()
             }
           });
@@ -41,7 +42,8 @@ export async function POST(request: NextRequest) {
               countedQty: checkData.countedQty,
               variance: checkData.variance,
               checkedBy: checkData.checkedBy,
-              status: checkData.status
+              status: checkData.status,
+              reason: checkData.reason ?? null
             }
           });
         }
@@ -53,7 +55,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Handle single operation
-    const { productId, sessionId, expectedQty, countedQty, variance, checkedBy, status } = body;
+    const { productId, sessionId, expectedQty, countedQty, variance, checkedBy, status, reason } = body;
 
     const existingCheck = await prisma.stockCheck.findFirst({
       where: {
@@ -71,6 +73,7 @@ export async function POST(request: NextRequest) {
           variance,
           checkedBy,
           status,
+          reason: reason ?? null,
           checkedAt: new Date()
         }
       });
@@ -83,7 +86,8 @@ export async function POST(request: NextRequest) {
           countedQty,
           variance,
           checkedBy,
-          status
+          status,
+          reason: reason ?? null
         }
       });
     }
