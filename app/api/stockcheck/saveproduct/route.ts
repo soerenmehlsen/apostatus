@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db as prisma } from '@/lib/db';
+import { auth } from '@/auth';
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+    const authSession = await auth();
+    const checkedBy = authSession?.user?.name ?? 'Unknown';
+
     // Handle batch operations
     if (Array.isArray(body)) {
       const stockChecks = [];
@@ -26,7 +29,7 @@ export async function POST(request: NextRequest) {
             data: {
               countedQty: checkData.countedQty,
               variance: checkData.variance,
-              checkedBy: checkData.checkedBy,
+              checkedBy,
               status: checkData.status,
               reason: checkData.reason ?? null,
               checkedAt: new Date()
@@ -41,7 +44,7 @@ export async function POST(request: NextRequest) {
               expectedQty: checkData.expectedQty,
               countedQty: checkData.countedQty,
               variance: checkData.variance,
-              checkedBy: checkData.checkedBy,
+              checkedBy,
               status: checkData.status,
               reason: checkData.reason ?? null
             }
@@ -55,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Handle single operation
-    const { productId, sessionId, expectedQty, countedQty, variance, checkedBy, status, reason } = body;
+    const { productId, sessionId, expectedQty, countedQty, variance, status, reason } = body;
 
     const existingCheck = await prisma.stockCheck.findFirst({
       where: {
