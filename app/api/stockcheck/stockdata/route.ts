@@ -60,6 +60,7 @@ export const GET = withErrorHandling(
             variance: true,
             checkedBy: true,
             status: true,
+            reason: true,
           },
         })
       : [];
