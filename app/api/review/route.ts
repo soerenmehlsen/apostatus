@@ -85,6 +85,7 @@ export async function GET(request: NextRequest) {
           countedQty: check.countedQty,
           variance,
           value,
+          reason: check.reason,
         };
       })
       .filter(item => item.variance !== 0);
