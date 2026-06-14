@@ -31,6 +31,9 @@ export function installDemoFetch(): void {
     if (isApi && !isPassthrough) {
       let body: unknown;
       const rawBody = init?.body;
+      // Kun JSON-bodies parses. Ikke-string-bodies (fx FormData ved upload)
+      // efterlades undefined — de demo-handlers der modtager dem bruger dem
+      // ikke (upload er deaktiveret i demoen).
       if (typeof rawBody === "string") {
         try {
           body = JSON.parse(rawBody);
@@ -45,6 +48,12 @@ export function installDemoFetch(): void {
           status: result.status,
           headers: { "Content-Type": "application/json" },
         });
+      }
+
+      // Ingen demo-handler matchede: kaldet ville ramme den rigtige server.
+      // Advar i udvikling, så manglende demo-ruter opdages tidligt.
+      if (process.env.NODE_ENV !== "production") {
+        console.warn(`[demo] Uhåndteret API-kald falder igennem til serveren: ${method} ${url}`);
       }
     }
 
