@@ -34,6 +34,8 @@ export interface ArchiveDetailItem {
   variance: number;
   /** variance * unit price (DKK). */
   value: number;
+  /** Årsagskode for afvigelsen, eller null hvis ingen. */
+  reason: string | null;
 }
 
 /** Full read-only detail of a single archived stocktake. */

@@ -118,6 +118,7 @@ export async function getArchiveSessionDetail(
         countedQty: check.countedQty,
         variance,
         value,
+        reason: check.reason,
       };
     });
 
