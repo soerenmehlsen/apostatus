@@ -3,6 +3,7 @@ import Image from "next/image";
 import { auth } from "@/auth";
 import { Card } from "@/components/ui/card";
 import { SignInButton } from "@/components/auth/sign-in-button";
+import { TryDemoButton } from "@/components/demo/try-demo-button";
 
 export default async function LoginPage() {
   const session = await auth();
@@ -29,8 +30,9 @@ export default async function LoginPage() {
             Log ind med din arbejdskonto for at fortsætte.
           </p>
         </div>
-        <div className="w-full px-6">
+        <div className="w-full space-y-3 px-6">
           <SignInButton />
+          <TryDemoButton />
         </div>
       </Card>
     </div>
