@@ -84,7 +84,7 @@ export default function VarianceReasonDialog({
         </div>
 
         <Select value={reason} onValueChange={setReason}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger className="w-full" aria-label="Årsag til afvigelse">
             <SelectValue placeholder="Vælg en årsag..." />
           </SelectTrigger>
           <SelectContent>

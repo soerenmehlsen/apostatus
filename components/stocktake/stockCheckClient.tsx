@@ -266,6 +266,13 @@ export default function StockCheckClient({
         next.delete(productId);
         return next;
       });
+      // Drop any saved reason so a re-count starts fresh rather than
+      // pre-filling a reason that may no longer fit the new variance.
+      setProductReasons((prev) => {
+        const next = { ...prev };
+        delete next[productId];
+        return next;
+      });
       try {
         const res = await fetch("/api/stockcheck/saveproduct", {
           method: "DELETE",
