@@ -29,6 +29,7 @@ import { LoadingSpinner } from "@/components/ui/loading-spinner";
 import { getLocationName } from "@/lib/dashboard-display";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import VarianceReasonDialog from "@/components/stocktake/varianceReasonDialog";
 
 interface Product {
   id: string;
@@ -47,6 +48,7 @@ interface StockCheckData {
   variance: number;
   checkedBy: string;
   status: string;
+  reason: string | null;
 }
 
 interface ExistingCheck {
@@ -56,6 +58,7 @@ interface ExistingCheck {
   variance: number;
   checkedBy: string | null;
   status: string;
+  reason: string | null;
 }
 
 interface StockCheckClientProps {
@@ -79,6 +82,18 @@ export default function StockCheckClient({
   const [checkedProducts, setCheckedProducts] = useState<Set<string>>(
     () => new Set(initialChecks.map((c) => c.productId))
   );
+  const [productReasons, setProductReasons] = useState<Record<string, string>>(
+    () =>
+      Object.fromEntries(
+        initialChecks
+          .filter((c) => c.reason)
+          .map((c) => [c.productId, c.reason as string])
+      )
+  );
+  const [reasonDialog, setReasonDialog] = useState<{
+    open: boolean;
+    productId: string | null;
+  }>({ open: false, productId: null });
   const [sessionId, setSessionId] = useState("");
   const [isCompleting, setIsCompleting] = useState(false);
 
@@ -108,6 +123,11 @@ export default function StockCheckClient({
     if (!checks.length) return;
     setProductCounts(Object.fromEntries(checks.map((c) => [c.productId, c.countedQty])));
     setCheckedProducts(new Set(checks.map((c) => c.productId)));
+    setProductReasons(
+      Object.fromEntries(
+        checks.filter((c) => c.reason).map((c) => [c.productId, c.reason as string])
+      )
+    );
     setInitials((prev) => prev || (checks.find((c) => c.checkedBy)?.checkedBy ?? ""));
   }, []);
 
@@ -166,19 +186,29 @@ export default function StockCheckClient({
   }, [selectedLocations, currentLocation]);
 
   // Build the saved-check payload for a single product from current state.
-  const buildCheck = (productId: string): StockCheckData | null => {
+  // reasonOverride is passed straight after a dialog confirm to avoid reading
+  // not-yet-committed reason state.
+  const buildCheck = (
+    productId: string,
+    reasonOverride?: string
+  ): StockCheckData | null => {
     const product = products.find((p) => p.id === productId);
     if (!product) return null;
     const countedQty = productCounts[productId] || 0;
     const expectedQty = product.expectedQty || 0;
+    const variance = countedQty - expectedQty;
     return {
       productId,
       sessionId,
       expectedQty,
       countedQty,
-      variance: countedQty - expectedQty,
+      variance,
       checkedBy: initials,
       status: "checked",
+      reason:
+        variance !== 0
+          ? reasonOverride ?? productReasons[productId] ?? null
+          : null,
     };
   };
 
@@ -195,6 +225,33 @@ export default function StockCheckClient({
 
   const setToExpectedQty = (productId: string, expectedQty: number) => {
     setCount(productId, expectedQty);
+  };
+
+  // Persist a single confirmed line. Optimistically marks it checked, then
+  // saves immediately so the count survives leaving and resuming.
+  const persistCheck = async (productId: string, reasonOverride?: string) => {
+    const check = buildCheck(productId, reasonOverride);
+    if (!check) return;
+
+    setCheckedProducts((prev) => new Set(prev).add(productId));
+    try {
+      const res = await fetch("/api/stockcheck/saveproduct", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(check),
+      });
+      if (!res.ok) throw new Error("Failed to save stock check");
+    } catch (error) {
+      console.error("Error saving stock check:", error);
+      toast.error("Kunne ikke gemme optælling", {
+        description: "Prøv igen eller tjek din forbindelse.",
+      });
+      setCheckedProducts((prev) => {
+        const next = new Set(prev);
+        next.delete(productId);
+        return next;
+      });
+    }
   };
 
   const handleProductCheck = async (productId: string) => {
@@ -226,30 +283,23 @@ export default function StockCheckClient({
       return;
     }
 
-    const check = buildCheck(productId);
-    if (!check) return;
-
-    // Optimistically mark checked, then persist immediately so the count
-    // survives leaving and resuming the stocktake.
-    setCheckedProducts((prev) => new Set(prev).add(productId));
-    try {
-      const res = await fetch("/api/stockcheck/saveproduct", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(check),
-      });
-      if (!res.ok) throw new Error("Failed to save stock check");
-    } catch (error) {
-      console.error("Error saving stock check:", error);
-      toast.error("Kunne ikke gemme optælling", {
-        description: "Prøv igen eller tjek din forbindelse.",
-      });
-      setCheckedProducts((prev) => {
-        const next = new Set(prev);
-        next.delete(productId);
-        return next;
-      });
+    // A variance requires a reason — open the dialog instead of saving now.
+    const variance = (productCounts[productId] || 0) - (product.expectedQty || 0);
+    if (variance !== 0) {
+      setReasonDialog({ open: true, productId });
+      return;
     }
+
+    await persistCheck(productId);
+  };
+
+  // Dialog confirmed: record the reason and persist the line.
+  const handleReasonConfirm = (reason: string) => {
+    const productId = reasonDialog.productId;
+    if (!productId) return;
+    setProductReasons((prev) => ({ ...prev, [productId]: reason }));
+    setReasonDialog({ open: false, productId: null });
+    void persistCheck(productId, reason);
   };
 
   // Per-location progress for the location tabs.
@@ -287,6 +337,19 @@ export default function StockCheckClient({
   );
   const progressPercentage = totalAll > 0 ? (checkedAll / totalAll) * 100 : 0;
   const isAllChecked = checkedAll === totalAll && totalAll > 0;
+
+  const reasonDialogProduct = useMemo(() => {
+    if (!reasonDialog.productId) return null;
+    const product = products.find((p) => p.id === reasonDialog.productId);
+    if (!product) return null;
+    return {
+      id: product.id,
+      name: product.name,
+      sku: product.sku || product.id,
+      expectedQty: product.expectedQty || 0,
+      countedQty: productCounts[product.id] || 0,
+    };
+  }, [reasonDialog.productId, products, productCounts]);
 
   const completeStocktake = async () => {
     if (!isAllChecked || checkedProducts.size === 0) return;
@@ -584,6 +647,20 @@ export default function StockCheckClient({
           </div>
         </div>
       </div>
+
+      <VarianceReasonDialog
+        open={reasonDialog.open}
+        onOpenChange={(open) =>
+          setReasonDialog((prev) => ({ ...prev, open }))
+        }
+        product={reasonDialogProduct}
+        initialReason={
+          reasonDialog.productId
+            ? productReasons[reasonDialog.productId] ?? null
+            : null
+        }
+        onConfirm={handleReasonConfirm}
+      />
     </div>
   );
 }
