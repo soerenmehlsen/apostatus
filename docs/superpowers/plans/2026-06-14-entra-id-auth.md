@@ -21,7 +21,7 @@
 **New files:**
 - `auth.ts` — NextAuth config; exports `handlers, auth, signIn, signOut`.
 - `app/api/auth/[...nextauth]/route.ts` — re-exports `GET, POST` from handlers.
-- `middleware.ts` — route protection via the `auth` wrapper.
+- `proxy.ts` — route protection via the `auth` wrapper (Next.js 16 renamed the `middleware` convention to `proxy`).
 - `app/login/page.tsx` — login page (server component).
 - `components/auth/sign-in-button.tsx` — client "Log ind med Microsoft" button.
 - `components/auth/sign-out-button.tsx` — client sign-out button for the header.
