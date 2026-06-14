@@ -69,6 +69,7 @@ model StockCheck {
   checkedAt   DateTime         @default(now())
   checkedBy   String?
   status      String
+  reason      String?
   product     Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
   session     StocktakeSession @relation(fields: [sessionId], references: [id], onUpdate: NoAction)
 
