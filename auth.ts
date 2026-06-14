@@ -7,6 +7,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       clientId: process.env.AUTH_MICROSOFT_ENTRA_ID_ID,
       clientSecret: process.env.AUTH_MICROSOFT_ENTRA_ID_SECRET,
       issuer: process.env.AUTH_MICROSOFT_ENTRA_ID_ISSUER,
+      // Fetch a sharper profile photo than the 48x48 default. The base64 image
+      // is stored in the session JWT cookie, so we avoid going much larger.
+      profilePhotoSize: 96,
     }),
   ],
   session: { strategy: "jwt" },

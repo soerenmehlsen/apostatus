@@ -1,12 +1,13 @@
-import { User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { auth } from "@/auth";
 import { SignOutButton } from "@/components/auth/sign-out-button";
+import { UserAvatar } from "@/components/layout/user-avatar";
 
 export async function Header() {
   const session = await auth();
   const userName = session?.user?.name ?? null;
+  const userImage = session?.user?.image ?? null;
 
   return (
     <header className="border-b px-6 py-4">
@@ -34,15 +35,8 @@ export async function Header() {
 
         {/* Right section */}
         <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
-          {userName && (
-            <span className="hidden sm:block font-medium text-sm lg:text-base truncate max-w-32 lg:max-w-none">
-              {userName}
-            </span>
-          )}
           {/* Avatar */}
-          <div className="w-8 h-8 bg-muted-foreground/60 rounded-full flex items-center justify-center flex-shrink-0">
-            <User size={16} className="text-white" />
-          </div>
+          <UserAvatar name={userName} image={userImage} />
           {userName && <SignOutButton />}
         </div>
       </div>
