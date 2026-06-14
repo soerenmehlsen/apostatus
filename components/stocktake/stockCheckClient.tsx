@@ -46,7 +46,6 @@ interface StockCheckData {
   expectedQty: number;
   countedQty: number;
   variance: number;
-  checkedBy: string;
   status: string;
   reason: string | null;
 }
@@ -72,9 +71,6 @@ export default function StockCheckClient({
   initialChecks = [],
 }: StockCheckClientProps) {
   const [searchTerm, setSearchTerm] = useState("");
-  const [initials, setInitials] = useState(
-    () => initialChecks.find((c) => c.checkedBy)?.checkedBy ?? ""
-  );
   const [currentLocation, setCurrentLocation] = useState("");
   const [productCounts, setProductCounts] = useState<Record<string, number>>(
     () => Object.fromEntries(initialChecks.map((c) => [c.productId, c.countedQty]))
@@ -104,14 +100,7 @@ export default function StockCheckClient({
   const router = useRouter();
 
   useEffect(() => {
-    const initialsParam = searchParams.get("initials");
     const sessionIdParam = searchParams.get("sessionId");
-
-    // The URL only carries initials when starting fresh; on resume we keep the
-    // value hydrated from the existing checks.
-    if (initialsParam) {
-      setInitials(initialsParam);
-    }
     if (sessionIdParam) {
       setSessionId(sessionIdParam);
     }
@@ -128,7 +117,6 @@ export default function StockCheckClient({
         checks.filter((c) => c.reason).map((c) => [c.productId, c.reason as string])
       )
     );
-    setInitials((prev) => prev || (checks.find((c) => c.checkedBy)?.checkedBy ?? ""));
   }, []);
 
   const fetchStocktakeData = useCallback(async () => {
@@ -203,7 +191,6 @@ export default function StockCheckClient({
       expectedQty,
       countedQty,
       variance,
-      checkedBy: initials,
       status: "checked",
       reason:
         variance !== 0
@@ -384,7 +371,7 @@ export default function StockCheckClient({
       const response = await fetch("/api/stockcheck/completecheck", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, completedBy: initials }),
+        body: JSON.stringify({ sessionId }),
       });
 
       if (response.ok) {
@@ -410,7 +397,7 @@ export default function StockCheckClient({
   if (isLoading) {
     return (
       <div className="mx-auto w-full max-w-5xl space-y-8">
-        <PageHeader initials={initials} />
+        <PageHeader />
         <Card className="items-center gap-3 py-16 text-center">
           <LoadingSpinner size="lg" />
           <p className="text-sm text-muted-foreground">
@@ -423,7 +410,7 @@ export default function StockCheckClient({
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 pb-28 sm:pb-8">
-      <PageHeader initials={initials} />
+      <PageHeader />
 
       {/* Location tabs with per-location progress */}
       {locationStats.length > 0 && (
@@ -672,7 +659,7 @@ export default function StockCheckClient({
   );
 }
 
-function PageHeader({ initials }: { initials: string }) {
+function PageHeader() {
   return (
     <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div className="space-y-3">
@@ -692,14 +679,6 @@ function PageHeader({ initials }: { initials: string }) {
           </p>
         </div>
       </div>
-      {initials && (
-        <div className="inline-flex items-center gap-2 self-start rounded-full border bg-muted/50 px-3 py-1.5 text-sm sm:self-auto">
-          <span className="flex size-6 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold uppercase text-primary">
-            {initials.slice(0, 2)}
-          </span>
-          <span className="text-muted-foreground">Tæller op</span>
-        </div>
-      )}
     </header>
   );
 }
