@@ -271,6 +271,10 @@ function completeCheck(body: unknown): DemoResponse {
       session = target;
     }
   });
+  // Ukendt session -> 404, så UI'et ikke får success med session: undefined.
+  if (!session) {
+    return { status: 404, body: { error: "Failed to complete stocktake" } };
+  }
   return {
     status: 200,
     body: {
