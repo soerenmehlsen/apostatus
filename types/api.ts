@@ -85,7 +85,12 @@ export const LOCATION_MAP: Record<string, string> = {
   '101': 'Hovedetage',
   '102': 'Baglager',
   '103': 'Køleskab',
-  '104': 'Kontrollerede stoffer',
-  '105': 'Håndkøb',
-  '111': 'Nødkasse'
+  '104': 'Mærkevarer',
+  '105': 'Mærkevarer',
+  '106': 'Mærkevarer',
+  '107': 'Mærkevarer',
+  '108': 'Mærkevarer',
+  '109': 'Mærkevarer',
+  '110': 'Mærkevarer',
+  '111': 'Mærkevarer'
 } as const;

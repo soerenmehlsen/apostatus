@@ -245,6 +245,7 @@ export default function DashboardClient({
                 <TableHeader>
                   <TableRow className="hover:bg-transparent">
                     <TableHead className="px-5 py-3">Lokation</TableHead>
+                    <TableHead className="px-5 py-3">Navn</TableHead>
                     <TableHead className="px-5 py-3">Oprettet af</TableHead>
                     <TableHead className="px-5 py-3">Dato</TableHead>
                     <TableHead className="px-5 py-3">Status</TableHead>

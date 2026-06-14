@@ -12,18 +12,10 @@ interface SessionTableRowProps {
   formatDate: (date: string) => string;
 }
 
-function initialsOf(name: string): string {
-  if (!name || name === "Unknown") return "—";
-  return name
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase() ?? "")
-    .join("");
-}
-
 const SessionTableRow = memo(
   ({ session, formatDate }: SessionTableRowProps) => {
-    const locations = getLocationNames(session.location);
+    const locationNames = getLocationNames(session.location);
+    const locationCodes = Array.from(new Set(session.location));
     const action = getSessionAction(session.id, session.status);
     const creator =
       session.name && session.name !== "Unknown" ? session.name : "Ukendt";
@@ -32,12 +24,25 @@ const SessionTableRow = memo(
       <TableRow className="group">
         <TableCell className="py-3">
           <div className="flex flex-wrap gap-1.5">
-            {locations.length > 0 ? (
-              locations.map((name) => (
+            {locationCodes.length > 0 ? (
+              locationCodes.map((code) => (
                 <span
-                  key={name}
+                  key={code}
                   className="rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-foreground/80"
                 >
+                  {code}
+                </span>
+              ))
+            ) : (
+              <span className="text-sm text-muted-foreground">—</span>
+            )}
+          </div>
+        </TableCell>
+        <TableCell className="py-3">
+          <div className="flex flex-wrap gap-1.5">
+            {locationNames.length > 0 ? (
+              locationNames.map((name) => (
+                <span key={name} className="text-sm text-foreground">
                   {name}
                 </span>
               ))
@@ -47,12 +52,7 @@ const SessionTableRow = memo(
           </div>
         </TableCell>
         <TableCell className="py-3">
-          <div className="flex items-center gap-2.5">
-            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
-              {initialsOf(session.name)}
-            </span>
-            <span className="text-sm text-foreground">{creator}</span>
-          </div>
+          <span className="text-sm text-foreground">{creator}</span>
         </TableCell>
         <TableCell className="py-3 text-sm text-muted-foreground tabular-nums">
           {formatDate(session.date)}
