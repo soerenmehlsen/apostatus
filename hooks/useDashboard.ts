@@ -27,9 +27,12 @@ export const useDashboard = (props?: UseDashboardProps) => {
       setError(null);
       
       const response = await fetch('/api/dashboard');
-      const data = await response.json();
+      const json = await response.json();
 
       if (response.ok) {
+        // /api/dashboard wraps its payload in the ApiResponse envelope
+        // ({ data, success, timestamp }), so the sessions/stats live under .data.
+        const data = json.data ?? json;
         setSessions(data.sessions || []);
         setStats(data.stats || {
           totalSessions: 0,
@@ -38,7 +41,7 @@ export const useDashboard = (props?: UseDashboardProps) => {
           needsReview: 0
         });
       } else {
-        const errorMessage = data.error || 'Failed to load dashboard data';
+        const errorMessage = json.error || 'Failed to load dashboard data';
         setError(errorMessage);
         toast.error("Failed to load dashboard data", {
           description: errorMessage,
