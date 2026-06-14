@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -25,10 +25,14 @@ import {
 import { Button } from "@/components/ui/button";
 import StatsCard from "@/components/dashboard/statsCard";
 import { LoadingSpinner } from "@/components/ui/loading-spinner";
+import { VarianceBadge } from "@/components/ui/variance-badge";
 import {
   getLocationName,
   getStatusMeta,
   formatDateDa,
+  formatCurrency,
+  valueVarianceTone,
+  valueVarianceText,
 } from "@/lib/dashboard-display";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -67,16 +71,6 @@ interface ReviewData {
 interface ReviewClientProps {
   initialData?: ReviewData | null;
   sessionId?: string | null;
-}
-
-const currencyFormatter = new Intl.NumberFormat("da-DK", {
-  style: "currency",
-  currency: "DKK",
-  maximumFractionDigits: 0,
-});
-
-function formatCurrency(value: number): string {
-  return currencyFormatter.format(value);
 }
 
 export default function ReviewClient({
@@ -149,16 +143,6 @@ export default function ReviewClient({
       setIsConfirming(false);
     }
   };
-
-  const valueVarianceTone = useMemo(() => {
-    if (!reviewData) return "bg-muted text-muted-foreground";
-    const v = reviewData.summary.totalValueVariance;
-    if (v < 0)
-      return "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300";
-    if (v > 0)
-      return "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300";
-    return "bg-primary/10 text-primary";
-  }, [reviewData]);
 
   if (isLoading) {
     return (
@@ -235,7 +219,7 @@ export default function ReviewClient({
           title="Værdiafvigelse"
           value={formatCurrency(summary.totalValueVariance)}
           icon={Coins}
-          tone={valueVarianceTone}
+          tone={valueVarianceTone(summary.totalValueVariance)}
         />
       </section>
 
@@ -299,11 +283,7 @@ export default function ReviewClient({
                       <TableCell
                         className={cn(
                           "text-right font-medium tabular-nums",
-                          item.value < 0
-                            ? "text-red-600 dark:text-red-400"
-                            : item.value > 0
-                              ? "text-amber-600 dark:text-amber-400"
-                              : "text-muted-foreground"
+                          valueVarianceText(item.value)
                         )}
                       >
                         {formatCurrency(item.value)}
@@ -345,11 +325,7 @@ export default function ReviewClient({
                     <span
                       className={cn(
                         "font-medium tabular-nums",
-                        item.value < 0
-                          ? "text-red-600 dark:text-red-400"
-                          : item.value > 0
-                            ? "text-amber-600 dark:text-amber-400"
-                            : "text-muted-foreground"
+                        valueVarianceText(item.value)
                       )}
                     >
                       {formatCurrency(item.value)}
@@ -426,24 +402,5 @@ function PageHeader({ status, statusLabel, statusPill }: PageHeaderProps) {
         </div>
       </div>
     </header>
-  );
-}
-
-function VarianceBadge({ variance }: { variance: number }) {
-  if (variance === 0) {
-    return <span className="text-sm tabular-nums text-muted-foreground">0</span>;
-  }
-  const positive = variance > 0;
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center rounded-md px-1.5 py-0.5 text-sm font-semibold tabular-nums",
-        positive
-          ? "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300"
-          : "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300"
-      )}
-    >
-      {positive ? `+${variance}` : variance}
-    </span>
   );
 }

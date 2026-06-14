@@ -80,6 +80,36 @@ export function formatDateDa(dateString: string): string {
   return dateFormatter.format(date);
 }
 
+const currencyFormatter = new Intl.NumberFormat("da-DK", {
+  style: "currency",
+  currency: "DKK",
+  maximumFractionDigits: 0,
+});
+
+/** Danish kroner, no decimals — e.g. "−1.250 kr." */
+export function formatCurrency(value: number): string {
+  return currencyFormatter.format(value);
+}
+
+/**
+ * Tailwind classes for a `StatsCard` icon tile reflecting a value variance:
+ * red for a loss, amber for a surplus, primary when it balances.
+ */
+export function valueVarianceTone(value: number): string {
+  if (value < 0)
+    return "bg-red-100 text-red-700 dark:bg-red-500/15 dark:text-red-300";
+  if (value > 0)
+    return "bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300";
+  return "bg-primary/10 text-primary";
+}
+
+/** Tailwind text color for an inline value variance figure. */
+export function valueVarianceText(value: number): string {
+  if (value < 0) return "text-red-600 dark:text-red-400";
+  if (value > 0) return "text-amber-600 dark:text-amber-400";
+  return "text-muted-foreground";
+}
+
 /**
  * Danish relative time, e.g. "i dag", "i går", "for 3 dage siden".
  * Falls back to an absolute date for anything older than ~30 days.

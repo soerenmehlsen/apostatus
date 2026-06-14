@@ -11,6 +11,7 @@ import {
   Upload,
   PlayCircle,
   Inbox,
+  Archive,
 } from "lucide-react";
 import {
   Table,
@@ -301,6 +302,12 @@ function PageHeader() {
         </p>
       </div>
       <div className="flex gap-2.5">
+        <Button asChild variant="outline" className="flex-1 sm:flex-none">
+          <Link href="/archive">
+            <Archive />
+            Arkiv
+          </Link>
+        </Button>
         <Button asChild variant="outline" className="flex-1 sm:flex-none">
           <Link href="/upload">
             <Upload />
