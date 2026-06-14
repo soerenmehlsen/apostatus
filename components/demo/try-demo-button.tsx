@@ -1,14 +1,14 @@
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 
-// prefetch={false}: undgå at Next henter route-handleren (og sætter cookien)
-// på forhånd, før brugeren faktisk klikker.
+// Bevidst et almindeligt <a> og IKKE next/link: vi har brug for en fuld
+// sideindlæsning, så root-layoutet (og DemoBootstrap, der installerer
+// fetch-interceptoren) gen-monteres med demo-cookien sat. En soft navigation
+// ville genbruge det allerede-monterede layout, så interceptoren aldrig blev
+// installeret, og dashboardet ville hente rigtige data.
 export function TryDemoButton() {
   return (
     <Button asChild variant="outline" size="lg" className="w-full">
-      <Link href="/api/demo/start" prefetch={false}>
-        Prøv demo uden login
-      </Link>
+      <a href="/api/demo/start">Prøv demo uden login</a>
     </Button>
   );
 }
