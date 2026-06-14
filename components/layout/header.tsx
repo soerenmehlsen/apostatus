@@ -3,11 +3,14 @@ import Link from "next/link";
 import { auth } from "@/auth";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { UserAvatar } from "@/components/layout/user-avatar";
+import { isDemoServer } from "@/lib/demo/is-demo-server";
+import { EndDemoButton } from "@/components/demo/end-demo-button";
 
 export async function Header() {
   const session = await auth();
-  const userName = session?.user?.name ?? null;
-  const userImage = session?.user?.image ?? null;
+  const demo = await isDemoServer();
+  const userName = demo ? "Demo-bruger" : (session?.user?.name ?? null);
+  const userImage = demo ? null : (session?.user?.image ?? null);
 
   return (
     <header className="border-b px-6 py-4">
@@ -37,7 +40,7 @@ export async function Header() {
         <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-4">
           {/* Avatar */}
           <UserAvatar name={userName} image={userImage} />
-          {userName && <SignOutButton />}
+          {demo ? <EndDemoButton /> : userName && <SignOutButton />}
         </div>
       </div>
     </header>

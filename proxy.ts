@@ -1,11 +1,25 @@
 import { auth } from "@/auth";
 import { NextResponse } from "next/server";
+import { DEMO_COOKIE, DEMO_COOKIE_VALUE } from "@/lib/demo/is-demo";
 
 export default auth((req) => {
   const { pathname } = req.nextUrl;
 
-  // Always allow the auth endpoints and the login page through.
-  if (pathname.startsWith("/api/auth") || pathname === "/login") {
+  // Always allow the auth endpoints, the demo start/stop routes and the
+  // login page through. Listed explicitly so future /api/demo/* routes are
+  // not silently exposed without auth.
+  if (
+    pathname.startsWith("/api/auth") ||
+    pathname === "/api/demo/start" ||
+    pathname === "/api/demo/stop" ||
+    pathname === "/login"
+  ) {
+    return NextResponse.next();
+  }
+
+  // Demo visitors have no auth session but carry the demo cookie.
+  const isDemo = req.cookies.get(DEMO_COOKIE)?.value === DEMO_COOKIE_VALUE;
+  if (isDemo) {
     return NextResponse.next();
   }
 
