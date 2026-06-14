@@ -4,6 +4,8 @@ import { getArchiveSessionDetail } from "@/lib/archive-server";
 import ArchiveDetailClient from "@/components/archive/archiveDetailClient";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { getDemoArchiveDetail } from "@/lib/demo/archive";
+import { isDemoServer } from "@/lib/demo/is-demo-server";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -14,7 +16,9 @@ interface PageProps {
 
 export default async function ArchiveDetail({ params }: PageProps) {
   const { sessionId } = await params;
-  const detail = await getArchiveSessionDetail(sessionId);
+  const detail = (await isDemoServer())
+    ? getDemoArchiveDetail(sessionId)
+    : await getArchiveSessionDetail(sessionId);
 
   if (!detail) {
     return (
