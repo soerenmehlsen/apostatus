@@ -1,4 +1,4 @@
-import { LOCATION_MAP } from "@/types/api";
+import { LOCATION_MAP, VARIANCE_REASON_MAP } from "@/types/api";
 import type { SessionStatus } from "@/types/api";
 
 /**
@@ -66,6 +66,11 @@ export function getLocationName(value: string): string {
 /** De-duplicated, readable location names for a session. */
 export function getLocationNames(locations: string[]): string[] {
   return Array.from(new Set(locations.map(getLocationName)));
+}
+
+export function getVarianceReasonLabel(code: string | null | undefined): string {
+  if (!code) return "";
+  return VARIANCE_REASON_MAP[code] ?? code;
 }
 
 const dateFormatter = new Intl.DateTimeFormat("da-DK", {
