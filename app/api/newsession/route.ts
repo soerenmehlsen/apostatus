@@ -3,17 +3,21 @@ import { db as prisma } from '@/lib/db';
 import { createSessionSchema } from '@/lib/validations/session';
 import { ApiResponseBuilder } from '@/lib/api-response';
 import { withValidation, withErrorHandling } from '@/lib/api-middleware';
+import { auth } from '@/auth';
 
 export const POST = withErrorHandling(
   withValidation(createSessionSchema)(async (request) => {
-    const { name, locations, createdBy } = request.validatedData;
+    const { locations } = request.validatedData;
 
-    // Create a new stocktake session
+    const authSession = await auth();
+    const userName = authSession?.user?.name ?? 'Unknown';
+
+    // Create a new stocktake session, attributed to the logged-in user.
     const session = await prisma.stocktakeSession.create({
       data: {
-        name: `Stocktake - ${name}`,
+        name: `Stocktake - ${userName}`,
         status: 'In Progress',
-        createdBy: createdBy,
+        createdBy: userName,
         createdAt: new Date(),
       },
     });

@@ -7,9 +7,6 @@ export const createSessionSchema = z.object({
   locations: z.array(z.string())
     .min(1, 'At least one location is required')
     .max(20, 'Too many locations selected'),
-  createdBy: z.string()
-    .min(1, 'Created by field is required')
-    .max(50, 'Created by must be less than 50 characters')
 });
 
 export const sessionIdSchema = z.object({
