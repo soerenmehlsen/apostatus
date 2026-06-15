@@ -8,6 +8,7 @@ import { AuthSessionProvider } from "@/components/providers/session-provider";
 import { DemoBootstrap } from "@/components/demo/demo-bootstrap";
 import { DemoBanner } from "@/components/demo/demo-banner";
 import { isDemoServer } from "@/lib/demo/is-demo-server";
+import { headers } from "next/headers";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -30,6 +31,8 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const demo = await isDemoServer();
+  const pathname = (await headers()).get("x-pathname") ?? "";
+  const isLoginPage = pathname === "/login";
   return (
     <html lang="en" suppressHydrationWarning>
       <body
@@ -45,7 +48,7 @@ export default async function RootLayout({
           >
             <div className="min-h-screen bg-background">
               {demo && <DemoBanner />}
-              <Header />
+              {!isLoginPage && <Header />}
               <main className="px-6 py-4">{children}
                  <Toaster />
               </main>
